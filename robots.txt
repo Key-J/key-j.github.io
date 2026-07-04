@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://key-j.github.io/sitemap.xml
