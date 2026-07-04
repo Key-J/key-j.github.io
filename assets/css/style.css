@@ -1,0 +1,365 @@
+/* ================================================================
+   Terminal theme — everything scales from the root font-size, which
+   is fluid via clamp(). Sizes below use ch/rem so the whole
+   "terminal" zooms coherently across devices.
+   ================================================================ */
+
+:root {
+  --bg: #010409;
+  --panel: #0d1117;
+  --panel-2: #161b22;
+  --fg: #c9d1d9;
+  --dim: #8b949e;
+  --accent: #3fb950;
+  --link: #58a6ff;
+  --border: #30363d;
+}
+
+[data-theme="light"] {
+  --bg: #eee8d5;
+  --panel: #fdf6e3;
+  --panel-2: #f3edd9;
+  --fg: #073642;
+  --dim: #657b83;
+  --accent: #859900;
+  --link: #268bd2;
+  --border: #d6cfb8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* fluid type: ~14px on phones → ~18px on large screens */
+  font-size: clamp(14px, 1vw + 0.55rem, 18px);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+  line-height: 1.6;
+}
+
+/* ------------------------- terminal window ---------------------- */
+
+.terminal {
+  max-width: 88ch;
+  min-height: 100dvh;
+  margin-inline: auto;
+  background: var(--panel);
+  border-inline: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 90ch) {
+  .terminal {
+    min-height: 0;
+    margin-block: 4dvh;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgb(0 0 0 / 0.45);
+    overflow: hidden;
+  }
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 1.5ch;
+  padding: 0.6rem 1.5ch;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 0.8ch;
+}
+
+.dots i {
+  width: 0.85em;
+  height: 0.85em;
+  border-radius: 50%;
+  background: #ff5f57;
+}
+.dots i:nth-child(2) {
+  background: #febc2e;
+}
+.dots i:nth-child(3) {
+  background: #28c840;
+}
+
+.titlebar-title {
+  flex: 1;
+  text-align: center;
+  color: var(--dim);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --------------------------- command bar ------------------------ */
+
+.cmdbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75ch;
+  padding: 0.6rem 2ch;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.chip {
+  display: inline-block;
+  padding: 0.15em 1ch;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--accent);
+  text-decoration: none;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chip::before {
+  content: "> ";
+  color: var(--dim);
+}
+
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+/* ----------------------------- content --------------------------- */
+
+.screen {
+  flex: 1;
+  padding: 1rem 2ch 2rem;
+}
+
+section {
+  margin-block: 2.25rem;
+  scroll-margin-top: 4rem; /* clear the sticky cmdbar on anchor jumps */
+}
+
+.cmd {
+  margin: 0 0 0.75rem;
+  color: var(--fg);
+}
+
+.cmd.small {
+  font-size: 0.8rem;
+  margin: 0 0 0.5rem;
+}
+
+.prompt {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.output {
+  margin: 0;
+  padding-left: 2ch;
+  border-left: 2px solid var(--border);
+}
+
+a {
+  color: var(--link);
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+/* about: image + facts, side by side → stacked on narrow screens */
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
+  gap: 1.25rem 3ch;
+  align-items: start;
+}
+
+.imgframe {
+  margin: 0;
+  max-width: 28ch;
+}
+
+.imgframe img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.tagline {
+  color: var(--dim);
+  margin: 0 0 0.75rem;
+}
+
+/* key: value listings */
+
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 2ch;
+  margin: 0.75rem 0 0;
+}
+
+.kv dt {
+  color: var(--dim);
+}
+
+.kv dt::after {
+  content: ":";
+}
+
+.kv dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* news */
+
+.newslog {
+  list-style: none;
+}
+
+.newslog li {
+  margin-block: 0.35rem;
+}
+
+.newslog time {
+  color: var(--dim);
+  margin-right: 2ch;
+}
+
+/* projects: auto-fit grid, 3 cols on desktop → 1 on phones */
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
+  gap: 1rem 2ch;
+  border-left: 2px solid var(--border);
+}
+
+.card {
+  padding: 0.9rem 1.5ch;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+}
+
+.card p {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--dim);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75ch;
+}
+
+.tags span {
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.tags span::before {
+  content: "[";
+  color: var(--dim);
+}
+
+.tags span::after {
+  content: "]";
+  color: var(--dim);
+}
+
+/* publications */
+
+.publist {
+  list-style: none;
+  counter-reset: pub;
+}
+
+.publist li {
+  margin-block: 0.9rem;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.publist li::before {
+  counter-increment: pub;
+  content: "[" counter(pub) "]";
+  color: var(--dim);
+}
+
+.pub-title {
+  font-weight: 700;
+}
+
+.pub-authors,
+.pub-venue {
+  color: var(--dim);
+  font-size: 0.9rem;
+}
+
+/* ---------------------------- footer ----------------------------- */
+
+.promptbar {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  padding: 0.75rem 2ch;
+  border-top: 1px solid var(--border);
+  background: var(--panel-2);
+}
+
+.cursor {
+  width: 1ch;
+  height: 1.2em;
+  background: var(--accent);
+  animation: blink 1.1s steps(1) infinite;
+}
+
+.hint {
+  color: var(--dim);
+  font-size: 0.8rem;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .cursor {
+    animation: none;
+  }
+}

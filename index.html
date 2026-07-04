@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jackie (Yikun) Wang</title>
+    <meta name="description" content="Jackie (Yikun) Wang — Carnegie Mellon University. Research, projects, and publications." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>" />
+    <link rel="stylesheet" href="assets/css/style.css" />
+  </head>
+  <body>
+    <div class="terminal">
+      <header class="titlebar">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="titlebar-title">jackie@cmu: ~</span>
+        <button id="theme-toggle" class="chip" type="button" aria-label="Toggle color theme">theme</button>
+      </header>
+
+      <nav class="cmdbar" aria-label="Sections">
+        <a class="chip" href="#about">cd about</a>
+        <a class="chip" href="#news">cd news</a>
+        <a class="chip" href="#projects">cd projects</a>
+        <a class="chip" href="#publications">cd publications</a>
+        <a class="chip" href="#contact">cd contact</a>
+      </nav>
+
+      <main class="screen">
+        <!-- ============================ ABOUT ============================ -->
+        <section id="about" aria-label="About">
+          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> whoami</p>
+          <div class="output about-grid">
+            <figure class="imgframe">
+              <figcaption class="cmd small"><span class="prompt">$</span> imgcat portrait.jpg</figcaption>
+              <img src="assets/img/portrait.svg" alt="Portrait of Jackie Wang (placeholder)" width="400" height="400" />
+            </figure>
+            <div class="facts">
+              <h1>Jackie (Yikun) Wang</h1>
+              <p class="tagline">Carnegie Mellon University</p>
+              <p>
+                Short bio goes here — a couple of sentences about who you are, what you research,
+                and what you care about. Written for a general audience, no jargon required.
+              </p>
+              <dl class="kv">
+                <dt>research</dt>
+                <dd>your research area</dd>
+                <dt>location</dt>
+                <dd>Pittsburgh, PA</dd>
+                <dt>status</dt>
+                <dd>open to collaboration</dd>
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================ NEWS ============================= -->
+        <section id="news" aria-label="News">
+          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> tail -3 news.log</p>
+          <ul class="output newslog">
+            <li><time datetime="2026-07">2026-07</time> Launched this website.</li>
+            <li><time datetime="2026-06">2026-06</time> A recent piece of news goes here.</li>
+            <li><time datetime="2026-05">2026-05</time> An older piece of news goes here.</li>
+          </ul>
+        </section>
+
+        <!-- =========================== PROJECTS ========================== -->
+        <section id="projects" aria-label="Projects">
+          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> ls projects/</p>
+          <div class="output projects-grid">
+            <article class="card">
+              <h2><a href="#">project-one/</a></h2>
+              <p>One-line description of the project, what it does and why it matters.</p>
+              <p class="tags"><span>python</span><span>ml</span></p>
+            </article>
+            <article class="card">
+              <h2><a href="#">project-two/</a></h2>
+              <p>One-line description of the project, what it does and why it matters.</p>
+              <p class="tags"><span>c++</span></p>
+            </article>
+            <article class="card">
+              <h2><a href="#">project-three/</a></h2>
+              <p>One-line description of the project, what it does and why it matters.</p>
+              <p class="tags"><span>web</span></p>
+            </article>
+          </div>
+        </section>
+
+        <!-- ========================= PUBLICATIONS ======================== -->
+        <section id="publications" aria-label="Publications">
+          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> grep 2026 publications.bib</p>
+          <ol class="output publist" reversed>
+            <li>
+              <span class="pub-title">Title of a Paper Goes Here.</span>
+              <span class="pub-authors"><strong>J. Wang</strong>, A. Coauthor, B. Coauthor.</span>
+              <span class="pub-venue">Venue, 2026.</span>
+              <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
+            </li>
+            <li>
+              <span class="pub-title">Title of Another Paper Goes Here.</span>
+              <span class="pub-authors">A. Coauthor, <strong>J. Wang</strong>.</span>
+              <span class="pub-venue">Venue, 2026.</span>
+              <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
+            </li>
+          </ol>
+        </section>
+
+        <!-- =========================== CONTACT =========================== -->
+        <section id="contact" aria-label="Contact">
+          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> contact --show</p>
+          <dl class="output kv">
+            <dt>email</dt>
+            <dd><a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a></dd>
+            <dt>github</dt>
+            <dd><a href="https://github.com/Key-J">github.com/Key-J</a></dd>
+            <dt>scholar</dt>
+            <dd><a href="#">add your Google Scholar link</a></dd>
+          </dl>
+        </section>
+      </main>
+
+      <footer class="promptbar">
+        <span class="prompt">jackie@cmu:~$</span>
+        <span class="cursor" aria-hidden="true"></span>
+        <span class="hint">click a command above to navigate</span>
+      </footer>
+    </div>
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>
