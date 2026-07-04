@@ -2,6 +2,9 @@
    Terminal theme — everything scales from the root font-size, which
    is fluid via clamp(). Sizes below use ch/rem so the whole
    "terminal" zooms coherently across devices.
+
+   Layout model: the terminal is a fixed-height window (the viewport);
+   only the .screen area scrolls, like a real terminal emulator.
    ================================================================ */
 
 :root {
@@ -33,7 +36,11 @@
 html {
   /* fluid type: ~14px on phones → ~18px on large screens */
   font-size: clamp(14px, 1vw + 0.55rem, 18px);
-  scroll-behavior: smooth;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
@@ -42,13 +49,15 @@ body {
   color: var(--fg);
   font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
   line-height: 1.6;
+  overflow: hidden; /* the page never scrolls; the .screen does */
 }
 
-/* ------------------------- terminal window ---------------------- */
+/* ------------------------- terminal window ----------------------
+   Fixed vertical size: always exactly the viewport height. */
 
 .terminal {
+  height: 100dvh;
   max-width: 88ch;
-  min-height: 100dvh;
   margin-inline: auto;
   background: var(--panel);
   border-inline: 1px solid var(--border);
@@ -56,65 +65,15 @@ body {
   flex-direction: column;
 }
 
-@media (min-width: 90ch) {
-  .terminal {
-    min-height: 0;
-    margin-block: 4dvh;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    box-shadow: 0 12px 40px rgb(0 0 0 / 0.45);
-    overflow: hidden;
-  }
-}
-
-.titlebar {
-  display: flex;
-  align-items: center;
-  gap: 1.5ch;
-  padding: 0.6rem 1.5ch;
-  background: var(--panel-2);
-  border-bottom: 1px solid var(--border);
-}
-
-.dots {
-  display: inline-flex;
-  gap: 0.8ch;
-}
-
-.dots i {
-  width: 0.85em;
-  height: 0.85em;
-  border-radius: 50%;
-  background: #ff5f57;
-}
-.dots i:nth-child(2) {
-  background: #febc2e;
-}
-.dots i:nth-child(3) {
-  background: #28c840;
-}
-
-.titlebar-title {
-  flex: 1;
-  text-align: center;
-  color: var(--dim);
-  font-size: 0.9rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* --------------------------- command bar ------------------------ */
 
 .cmdbar {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  flex: none;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75ch;
   padding: 0.6rem 2ch;
-  background: var(--panel);
+  background: var(--panel-2);
   border-bottom: 1px solid var(--border);
 }
 
@@ -123,7 +82,7 @@ body {
   padding: 0.15em 1ch;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--panel-2);
+  background: var(--panel);
   color: var(--accent);
   text-decoration: none;
   font: inherit;
@@ -143,16 +102,22 @@ body {
   color: var(--fg);
 }
 
-/* ----------------------------- content --------------------------- */
+/* ----------------------------- content ---------------------------
+   The scrollback: the only scrollable region. */
 
 .screen {
   flex: 1;
+  overflow-y: auto;
   padding: 1rem 2ch 2rem;
+  scroll-behavior: smooth;
 }
 
 section {
   margin-block: 2.25rem;
-  scroll-margin-top: 4rem; /* clear the sticky cmdbar on anchor jumps */
+}
+
+section:first-child {
+  margin-top: 0.5rem;
 }
 
 .cmd {
@@ -326,40 +291,56 @@ h2 {
   font-size: 0.9rem;
 }
 
-/* ---------------------------- footer ----------------------------- */
+/* --------------------- typed-command output ---------------------- */
+
+#applog .cmd {
+  margin-top: 1rem;
+}
+
+#applog .output {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#applog .error {
+  color: #f85149;
+}
+
+/* ------------------------- prompt (input) ------------------------ */
 
 .promptbar {
-  display: flex;
-  align-items: center;
-  gap: 1ch;
-  padding: 0.75rem 2ch;
+  flex: none;
+  padding: 0.7rem 2ch;
   border-top: 1px solid var(--border);
   background: var(--panel-2);
 }
 
-.cursor {
-  width: 1ch;
-  height: 1.2em;
-  background: var(--accent);
-  animation: blink 1.1s steps(1) infinite;
+#prompt-form {
+  display: flex;
+  align-items: baseline;
+  gap: 1ch;
 }
 
-.hint {
+#cmd-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: max(1rem, 16px); /* ≥16px so mobile browsers don't zoom on focus */
+  caret-color: var(--accent);
+}
+
+#cmd-input::placeholder {
   color: var(--dim);
-  font-size: 0.8rem;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
+  opacity: 0.7;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
+  .screen {
     scroll-behavior: auto;
-  }
-  .cursor {
-    animation: none;
   }
 }

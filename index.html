@@ -10,21 +10,16 @@
   </head>
   <body>
     <div class="terminal">
-      <header class="titlebar">
-        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="titlebar-title">jackie@cmu: ~</span>
-        <button id="theme-toggle" class="chip" type="button" aria-label="Toggle color theme">theme</button>
-      </header>
-
       <nav class="cmdbar" aria-label="Sections">
         <a class="chip" href="#about">cd about</a>
         <a class="chip" href="#news">cd news</a>
         <a class="chip" href="#projects">cd projects</a>
         <a class="chip" href="#publications">cd publications</a>
         <a class="chip" href="#contact">cd contact</a>
+        <button id="theme-toggle" class="chip" type="button" aria-label="Toggle color theme">theme</button>
       </nav>
 
-      <main class="screen">
+      <main class="screen" id="screen">
         <!-- ============================ ABOUT ============================ -->
         <section id="about" aria-label="About">
           <p class="cmd"><span class="prompt">jackie@cmu:~$</span> whoami</p>
@@ -115,12 +110,17 @@
             <dd><a href="#">add your Google Scholar link</a></dd>
           </dl>
         </section>
+
+        <!-- typed-command output is appended here by main.js -->
+        <div id="applog" aria-live="polite"></div>
       </main>
 
       <footer class="promptbar">
-        <span class="prompt">jackie@cmu:~$</span>
-        <span class="cursor" aria-hidden="true"></span>
-        <span class="hint">click a command above to navigate</span>
+        <form id="prompt-form" autocomplete="off">
+          <label class="prompt" for="cmd-input">jackie@cmu:~$</label>
+          <input id="cmd-input" type="text" spellcheck="false" autocapitalize="none"
+                 aria-label="Type a command, e.g. help" placeholder="type 'help' or click a command above" />
+        </form>
       </footer>
     </div>
     <script src="assets/js/main.js"></script>
