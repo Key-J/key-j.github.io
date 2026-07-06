@@ -2,6 +2,8 @@
   const root = document.documentElement;
   const screen = document.getElementById("screen");
   const applog = document.getElementById("applog");
+  const intro = document.getElementById("intro");
+  const helpOutput = intro.querySelector(".output");
   const form = document.getElementById("prompt-form");
   const input = document.getElementById("cmd-input");
 
@@ -16,9 +18,6 @@
   }
   const saved = localStorage.getItem("theme");
   if (saved) root.dataset.theme = saved;
-  document.getElementById("theme-toggle").addEventListener("click", () => {
-    setTheme(root.dataset.theme === "dark" ? "light" : "dark");
-  });
 
   /* ---------------- output helpers ---------------- */
 
@@ -26,40 +25,41 @@
     return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   }
 
-  function echo(cmdText, outputHtml, isError) {
+  function echoLine(cmdText) {
     const p = document.createElement("p");
     p.className = "cmd";
     p.innerHTML = '<span class="prompt">jackie@cmu:~$</span> ' + escapeHtml(cmdText);
     applog.appendChild(p);
-    if (outputHtml) {
-      const div = document.createElement("div");
-      div.className = "output" + (isError ? " error" : "");
-      div.innerHTML = outputHtml;
-      applog.appendChild(div);
-    }
-    screen.scrollTo({ top: screen.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    return p;
   }
 
-  function goTo(id) {
-    document.getElementById(id).scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
+  /* scroll so the echoed command line sits at the top of the screen,
+     like a terminal that just printed a page of output */
+  function scrollToLine(p) {
+    screen.scrollTo({ top: p.offsetTop - 8, behavior: reducedMotion ? "auto" : "smooth" });
+  }
+
+  /* content: an HTML string (rendered) or a Node (appended) */
+  function echo(cmdText, content, opts) {
+    const p = echoLine(cmdText);
+    if (content != null) {
+      const div = document.createElement("div");
+      div.className = "output" + (opts && opts.error ? " text error" : typeof content === "string" && opts && opts.text ? " text" : "");
+      if (typeof content === "string") div.innerHTML = content;
+      else div.appendChild(content);
+      applog.appendChild(div);
+    }
+    scrollToLine(p);
+  }
+
+  function sectionContent(name) {
+    return document.getElementById("tpl-" + name).content.cloneNode(true);
   }
 
   /* ---------------- commands ---------------- */
 
-  const HELP = [
-    "available commands:",
-    "  help                     show this list",
-    "  cd <section>             go to a section (" + SECTIONS.join(", ") + ")",
-    "  ls [projects]            list sections, or project names",
-    "  whoami                   about me",
-    "  contact                  how to reach me",
-    "  theme [dark|light]       switch colors",
-    "  clear                    clear typed output",
-    "  top                      scroll back to the top",
-  ].join("\n");
-
   function projectNames() {
-    return Array.from(document.querySelectorAll("#projects .card h2 a")).map((a) => a.textContent.trim());
+    return Array.from(document.getElementById("tpl-projects").content.querySelectorAll(".card h2 a")).map((a) => a.textContent.trim());
   }
 
   function run(raw) {
@@ -67,41 +67,42 @@
     if (!line) return;
     const [cmd, ...args] = line.split(/\s+/);
     const arg = (args[0] || "").replace(/\/+$/, "").toLowerCase();
+    const name = cmd.toLowerCase();
 
-    switch (cmd.toLowerCase()) {
+    if (name === "whoami" || name === "about") {
+      echo(line, sectionContent("about"));
+      return;
+    }
+    if (SECTIONS.includes(name)) {
+      echo(line, sectionContent(name));
+      return;
+    }
+
+    switch (name) {
       case "help":
-      case "?":
-        echo(line, escapeHtml(HELP));
+      case "?": {
+        const p = echoLine(line);
+        applog.appendChild(helpOutput.cloneNode(true));
+        scrollToLine(p);
         break;
+      }
 
       case "cd": {
         const target = arg === "" || arg === "~" ? "about" : arg;
         if (SECTIONS.includes(target)) {
-          goTo(target);
+          echo(line, sectionContent(target));
         } else {
-          echo(line, "cd: no such directory: " + escapeHtml(arg) + " — try one of: " + SECTIONS.join(", "), true);
+          echo(line, "cd: no such directory: " + escapeHtml(arg) + " — try one of: " + SECTIONS.join(", "), { error: true });
         }
         break;
       }
 
       case "ls":
         if (arg === "projects") {
-          echo(line, projectNames().map(escapeHtml).join("\n"));
+          echo(line, projectNames().map(escapeHtml).join("\n"), { text: true });
         } else {
-          echo(line, SECTIONS.map((s) => s + "/").join("  "));
+          echo(line, SECTIONS.map((s) => s + "/").join("  "), { text: true });
         }
-        break;
-
-      case "whoami":
-      case "about":
-        goTo("about");
-        break;
-
-      case "news":
-      case "projects":
-      case "publications":
-      case "contact":
-        goTo(cmd.toLowerCase());
         break;
 
       case "theme":
@@ -110,7 +111,9 @@
         break;
 
       case "clear":
+        intro.hidden = true;
         applog.innerHTML = "";
+        screen.scrollTo({ top: 0 });
         break;
 
       case "top":
@@ -124,16 +127,22 @@
 
       case "sudo":
         if (args.join(" ") === "hire-me") {
-          echo(line, "permission granted. → <a href=\"#contact\">get in touch</a>");
+          echo(line, 'permission granted. run <button class="cmdlink" type="button" data-cmd="contact">contact</button> to get in touch.');
         } else {
-          echo(line, "jackie is not in the sudoers file. this incident will be reported.", true);
+          echo(line, "jackie is not in the sudoers file. this incident will be reported.", { error: true });
         }
         break;
 
       default:
-        echo(line, "command not found: " + escapeHtml(cmd) + " — type 'help'", true);
+        echo(line, "command not found: " + escapeHtml(cmd) + " — type 'help'", { error: true });
     }
   }
+
+  /* clicking a command name runs it (works inside intro, help output, etc.) */
+  screen.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-cmd]");
+    if (btn) run(btn.dataset.cmd);
+  });
 
   /* ---------------- input handling ---------------- */
 

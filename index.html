@@ -10,108 +10,32 @@
   </head>
   <body>
     <div class="terminal">
-      <nav class="cmdbar" aria-label="Sections">
-        <a class="chip" href="#about">cd about</a>
-        <a class="chip" href="#news">cd news</a>
-        <a class="chip" href="#projects">cd projects</a>
-        <a class="chip" href="#publications">cd publications</a>
-        <a class="chip" href="#contact">cd contact</a>
-        <button id="theme-toggle" class="chip" type="button" aria-label="Toggle color theme">theme</button>
-      </nav>
-
       <main class="screen" id="screen">
-        <!-- ============================ ABOUT ============================ -->
-        <section id="about" aria-label="About">
-          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> whoami</p>
-          <div class="output about-grid">
-            <figure class="imgframe">
-              <figcaption class="cmd small"><span class="prompt">$</span> imgcat portrait.jpg</figcaption>
-              <img src="assets/img/portrait.svg" alt="Portrait of Jackie Wang (placeholder)" width="400" height="400" />
-            </figure>
-            <div class="facts">
-              <h1>Jackie (Yikun) Wang</h1>
-              <p class="tagline">Carnegie Mellon University</p>
-              <p>
-                Short bio goes here — a couple of sentences about who you are, what you research,
-                and what you care about. Written for a general audience, no jargon required.
-              </p>
-              <dl class="kv">
-                <dt>research</dt>
-                <dd>your research area</dd>
-                <dt>location</dt>
-                <dd>Pittsburgh, PA</dd>
-                <dt>status</dt>
-                <dd>open to collaboration</dd>
-              </dl>
-            </div>
+        <!-- initial screen: nothing but the command instructions -->
+        <div id="intro">
+          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> help</p>
+          <div class="output">
+            <p class="banner">Jackie (Yikun) Wang &middot; Carnegie Mellon University</p>
+            <p>Welcome. Type a command below — or just click one:</p>
+            <ul class="helplist">
+              <li><button class="cmdlink" type="button" data-cmd="whoami">whoami</button><span class="desc">who I am</span></li>
+              <li><button class="cmdlink" type="button" data-cmd="news">news</button><span class="desc">recent updates</span></li>
+              <li><button class="cmdlink" type="button" data-cmd="projects">projects</button><span class="desc">what I'm building</span></li>
+              <li><button class="cmdlink" type="button" data-cmd="publications">publications</button><span class="desc">papers</span></li>
+              <li><button class="cmdlink" type="button" data-cmd="contact">contact</button><span class="desc">how to reach me</span></li>
+              <li><button class="cmdlink" type="button" data-cmd="theme">theme</button><span class="desc">switch dark / light colors</span></li>
+              <li><button class="cmdlink" type="button" data-cmd="clear">clear</button><span class="desc">wipe the screen</span></li>
+              <li><button class="cmdlink" type="button" data-cmd="help">help</button><span class="desc">show this list again</span></li>
+            </ul>
+            <noscript>
+              <p>This site needs JavaScript for the interactive commands.
+                 Meanwhile: <a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a> &middot;
+                 <a href="https://github.com/Key-J">github.com/Key-J</a></p>
+            </noscript>
           </div>
-        </section>
+        </div>
 
-        <!-- ============================ NEWS ============================= -->
-        <section id="news" aria-label="News">
-          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> tail -3 news.log</p>
-          <ul class="output newslog">
-            <li><time datetime="2026-07">2026-07</time> Launched this website.</li>
-            <li><time datetime="2026-06">2026-06</time> A recent piece of news goes here.</li>
-            <li><time datetime="2026-05">2026-05</time> An older piece of news goes here.</li>
-          </ul>
-        </section>
-
-        <!-- =========================== PROJECTS ========================== -->
-        <section id="projects" aria-label="Projects">
-          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> ls projects/</p>
-          <div class="output projects-grid">
-            <article class="card">
-              <h2><a href="#">project-one/</a></h2>
-              <p>One-line description of the project, what it does and why it matters.</p>
-              <p class="tags"><span>python</span><span>ml</span></p>
-            </article>
-            <article class="card">
-              <h2><a href="#">project-two/</a></h2>
-              <p>One-line description of the project, what it does and why it matters.</p>
-              <p class="tags"><span>c++</span></p>
-            </article>
-            <article class="card">
-              <h2><a href="#">project-three/</a></h2>
-              <p>One-line description of the project, what it does and why it matters.</p>
-              <p class="tags"><span>web</span></p>
-            </article>
-          </div>
-        </section>
-
-        <!-- ========================= PUBLICATIONS ======================== -->
-        <section id="publications" aria-label="Publications">
-          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> grep 2026 publications.bib</p>
-          <ol class="output publist" reversed>
-            <li>
-              <span class="pub-title">Title of a Paper Goes Here.</span>
-              <span class="pub-authors"><strong>J. Wang</strong>, A. Coauthor, B. Coauthor.</span>
-              <span class="pub-venue">Venue, 2026.</span>
-              <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
-            </li>
-            <li>
-              <span class="pub-title">Title of Another Paper Goes Here.</span>
-              <span class="pub-authors">A. Coauthor, <strong>J. Wang</strong>.</span>
-              <span class="pub-venue">Venue, 2026.</span>
-              <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
-            </li>
-          </ol>
-        </section>
-
-        <!-- =========================== CONTACT =========================== -->
-        <section id="contact" aria-label="Contact">
-          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> contact --show</p>
-          <dl class="output kv">
-            <dt>email</dt>
-            <dd><a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a></dd>
-            <dt>github</dt>
-            <dd><a href="https://github.com/Key-J">github.com/Key-J</a></dd>
-            <dt>scholar</dt>
-            <dd><a href="#">add your Google Scholar link</a></dd>
-          </dl>
-        </section>
-
-        <!-- typed-command output is appended here by main.js -->
+        <!-- command output is appended here by main.js -->
         <div id="applog" aria-live="polite"></div>
       </main>
 
@@ -119,10 +43,94 @@
         <form id="prompt-form" autocomplete="off">
           <label class="prompt" for="cmd-input">jackie@cmu:~$</label>
           <input id="cmd-input" type="text" spellcheck="false" autocapitalize="none"
-                 aria-label="Type a command, e.g. help" placeholder="type 'help' or click a command above" />
+                 aria-label="Type a command, e.g. help" placeholder="type a command — try 'help'" />
         </form>
       </footer>
     </div>
+
+    <!-- ================= section content (printed on demand) ================= -->
+
+    <template id="tpl-about">
+      <div class="about-grid">
+        <figure class="imgframe">
+          <figcaption class="cmd small"><span class="prompt">$</span> imgcat portrait.jpg</figcaption>
+          <img src="assets/img/portrait.svg" alt="Portrait of Jackie Wang (placeholder)" width="400" height="400" />
+        </figure>
+        <div class="facts">
+          <h1>Jackie (Yikun) Wang</h1>
+          <p class="tagline">Carnegie Mellon University</p>
+          <p>
+            Short bio goes here — a couple of sentences about who you are, what you research,
+            and what you care about. Written for a general audience, no jargon required.
+          </p>
+          <dl class="kv">
+            <dt>research</dt>
+            <dd>your research area</dd>
+            <dt>location</dt>
+            <dd>Pittsburgh, PA</dd>
+            <dt>status</dt>
+            <dd>open to collaboration</dd>
+          </dl>
+        </div>
+      </div>
+    </template>
+
+    <template id="tpl-news">
+      <ul class="newslog">
+        <li><time datetime="2026-07">2026-07</time> Launched this website.</li>
+        <li><time datetime="2026-06">2026-06</time> A recent piece of news goes here.</li>
+        <li><time datetime="2026-05">2026-05</time> An older piece of news goes here.</li>
+      </ul>
+    </template>
+
+    <template id="tpl-projects">
+      <div class="projects-grid">
+        <article class="card">
+          <h2><a href="#">project-one/</a></h2>
+          <p>One-line description of the project, what it does and why it matters.</p>
+          <p class="tags"><span>python</span><span>ml</span></p>
+        </article>
+        <article class="card">
+          <h2><a href="#">project-two/</a></h2>
+          <p>One-line description of the project, what it does and why it matters.</p>
+          <p class="tags"><span>c++</span></p>
+        </article>
+        <article class="card">
+          <h2><a href="#">project-three/</a></h2>
+          <p>One-line description of the project, what it does and why it matters.</p>
+          <p class="tags"><span>web</span></p>
+        </article>
+      </div>
+    </template>
+
+    <template id="tpl-publications">
+      <ol class="publist" reversed>
+        <li>
+          <span class="pub-title">Title of a Paper Goes Here.</span>
+          <span class="pub-authors"><strong>J. Wang</strong>, A. Coauthor, B. Coauthor.</span>
+          <span class="pub-venue">Venue, 2026.</span>
+          <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
+        </li>
+        <li>
+          <span class="pub-title">Title of Another Paper Goes Here.</span>
+          <span class="pub-authors">A. Coauthor, <strong>J. Wang</strong>.</span>
+          <span class="pub-venue">Venue, 2026.</span>
+          <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
+        </li>
+      </ol>
+    </template>
+
+    <template id="tpl-contact">
+      <dl class="kv">
+        <dt>email</dt>
+        <dd><a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a></dd>
+        <dt>github</dt>
+        <dd><a href="https://github.com/Key-J">github.com/Key-J</a></dd>
+        <dt>scholar</dt>
+        <dd><a href="#">add your Google Scholar link</a></dd>
+      </dl>
+    </template>
+
     <script src="assets/js/main.js"></script>
   </body>
 </html>

@@ -5,9 +5,10 @@ HTML/CSS/JS — no build step. GitHub Pages serves this branch directly.
 
 ## Editing
 
-- `index.html` — all content lives here, one `<section>` per "command".
+- `index.html` — the initial help screen, plus one `<template id="tpl-...">` per
+  section; commands (typed or clicked) print a template into the scrollback.
 - `assets/css/style.css` — theme colors (`:root` / `[data-theme="light"]`), layout, responsive rules.
-- `assets/js/main.js` — theme toggle only.
+- `assets/js/main.js` — the command interpreter (`run()`), theme, history.
 - `assets/img/` — images. Replace `portrait.svg` with a real photo (update the `<img>` in `index.html`).
 
 Preview locally with any static server, e.g. `python3 -m http.server 8000`.
