@@ -76,27 +76,39 @@ body {
   overflow-y: auto;
   padding: 1rem 2ch 1.5rem;
   scroll-behavior: smooth;
-  scrollbar-width: thin; /* Firefox + Chrome 121+ */
-  scrollbar-color: var(--border) transparent;
 }
 
-/* Safari (and older Chromium) scrollbar */
+/* Chromium + Safari: fully custom scrollbar — an accent "pill" thumb
+   floating inset on a subtle track. NOTE: setting the standard
+   scrollbar-color/width properties would make Chrome ignore all of
+   this, so those are scoped to Firefox only below. */
 .screen::-webkit-scrollbar {
-  width: 10px;
+  width: 13px;
 }
 
 .screen::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--panel-2);
+  border-left: 1px solid var(--border);
 }
 
 .screen::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 8px;
-  border: 2px solid var(--panel); /* inset look: thumb floats off the edge */
+  background: var(--accent);
+  border-radius: 7px;
+  border: 4px solid var(--panel-2); /* shrinks the pill and insets it from the edges */
+  min-height: 3rem;
 }
 
-.screen::-webkit-scrollbar-thumb:hover {
-  background: var(--dim);
+.screen::-webkit-scrollbar-thumb:hover,
+.screen::-webkit-scrollbar-thumb:active {
+  border-width: 3px; /* pill thickens on grab */
+}
+
+/* Firefox: no ::-webkit-scrollbar support, use the standard properties */
+@supports not selector(::-webkit-scrollbar) {
+  .screen {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--panel-2);
+  }
 }
 
 .cmd {
