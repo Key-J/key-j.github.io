@@ -9,7 +9,7 @@ HTML/CSS/JS — no build step. GitHub Pages serves this branch directly.
   section; commands (typed or clicked) print a template into the scrollback.
 - `assets/css/style.css` — theme colors (`:root` / `[data-theme="light"]`), layout, responsive rules.
 - `assets/js/main.js` — the command interpreter (`run()`), theme, history.
-- `assets/img/` — images. Replace `portrait.svg` with a real photo (update the `<img>` in `index.html`).
+- `assets/img/` — images (`portrait.jpg` is the profile photo shown by `whoami`).
 
 Preview locally with any static server, e.g. `python3 -m http.server 8000`.
 
