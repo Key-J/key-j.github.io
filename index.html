@@ -11,12 +11,26 @@
   <body>
     <div class="terminal">
       <main class="screen" id="screen">
-        <!-- initial screen: nothing but the command instructions -->
+        <!-- initial screen: welcome note + command instructions, nothing else -->
         <div id="intro">
+          <div class="motd">
+            <p class="banner">Jackie (Yikun) Wang &middot; Carnegie Mellon University</p>
+            <p>
+              Welcome! This page works like a computer <strong>terminal</strong>:
+              instead of menus, you give it commands and it prints the answer.
+            </p>
+            <ol class="howto">
+              <li>click any <span class="fake-cmdlink">green command</span> below, or</li>
+              <li>type it in the box at the bottom and press <kbd>Enter</kbd>.</li>
+            </ol>
+            <p>
+              Nothing to install and nothing can break — try
+              <button class="cmdlink" type="button" data-cmd="whoami">whoami</button> to start.
+            </p>
+          </div>
+
           <p class="cmd"><span class="prompt">jackie@cmu:~$</span> help</p>
           <div class="output">
-            <p class="banner">Jackie (Yikun) Wang &middot; Carnegie Mellon University</p>
-            <p>Welcome. Type a command below — or just click one:</p>
             <ul class="helplist">
               <li><button class="cmdlink" type="button" data-cmd="whoami">whoami</button><span class="desc">who I am</span></li>
               <li><button class="cmdlink" type="button" data-cmd="news">news</button><span class="desc">recent updates</span></li>
