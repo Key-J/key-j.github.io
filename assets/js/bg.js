@@ -165,9 +165,9 @@
   let emptyT = 0;
 
   function spawnWalker(forceDef, forceDir) {
-    if (mode !== "light" || walkers.length >= 3) return;
+    if (mode !== "light" || walkers.length >= 6) return;
     const now = performance.now();
-    if (forceDef === undefined && now - lastSpawn < 4000) return;
+    if (forceDef === undefined && now - lastSpawn < 2500) return;
     const def = WALKER_DEFS[forceDef !== undefined ? forceDef : Math.floor(Math.random() * WALKER_DEFS.length)];
     if (!SHEETS[def.sheet].ready) return;
     const dir = forceDir !== undefined ? forceDir : Math.random() < 0.5 ? -1 : 1;
