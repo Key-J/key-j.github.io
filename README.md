@@ -9,8 +9,11 @@ HTML/CSS/JS — no build step. GitHub Pages serves this branch directly.
   section; commands (typed or clicked) print a template into the scrollback.
 - `assets/css/style.css` — theme colors (`:root` / `[data-theme="light"]`), layout, responsive rules.
 - `assets/js/main.js` — the command interpreter (`run()`), theme, history.
-- `assets/js/bg.js` — background scenery (dark: digit rain; light: pixel critters).
+- `assets/js/bg.js` — background scenery (dark: digit rain + cursor glow + click
+  ripples; light: pixel critters + interaction-triggered walk-by characters).
 - `assets/img/` — images (`portrait.jpg` is the profile photo shown by `whoami`).
+- `assets/img/sprites/` — CC0 walk-cycle sheets by [GrafxKid](https://opengameart.org/users/grafxkid)
+  ("Classic Hero", "Classic Hero and Baddies Pack" on OpenGameArt).
 
 Preview locally with any static server, e.g. `python3 -m http.server 8000`.
 
