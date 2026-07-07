@@ -1,9 +1,11 @@
 /* Background scenery, drawn on a full-screen canvas *behind* the terminal.
    Dark theme: "digit rain" with bright column heads; a shimmering spotlight
    of digits follows the cursor and a click/tap sends out a ripple.
-   Light theme: CC0 sprite characters (GrafxKid, opengameart.org
-   "Classic Hero" + "Classic Hero and Baddies Pack") walk across the bottom
-   of the page — one is always around, activity summons more.
+   Light theme: a bank of CC0 pixel characters (GrafxKid's "Classic Hero" +
+   "Classic Hero and Baddies Pack", 0x72's "DungeonTileset II", both on
+   opengameart.org/itch.io, plus retro palette-swap recolors of the
+   monsters) walk across the bottom of the page — one is always around,
+   activity summons more.
    Purely decorative: pointer-events are off and the terminal covers it,
    so it can never interfere with the actual terminal. */
 (function () {
@@ -116,13 +118,45 @@
     }
   }
 
-  /* ---- light theme: walk-by characters (CC0 sprites by GrafxKid) ---- */
+  /* ---- light theme: walk-by characters (CC0 sprite sheets) ---- */
 
-  function loadSheet(src) {
-    const sheet = { canvas: null, ready: false };
+  const SHEETS = {};
+
+  /* classic palette-swap recolor: rotate the RGB channels; grays (outlines,
+     whites, bone) stay put, everything colored lands on a new palette */
+  function rotChannels(src, times) {
+    const c = document.createElement("canvas");
+    c.width = src.width;
+    c.height = src.height;
+    const g = c.getContext("2d");
+    g.drawImage(src, 0, 0);
+    const id = g.getImageData(0, 0, c.width, c.height);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      if (!d[i + 3]) continue;
+      const r = d[i];
+      const gr = d[i + 1];
+      const b = d[i + 2];
+      if (times === 1) {
+        d[i] = gr; d[i + 1] = b; d[i + 2] = r;
+      } else {
+        d[i] = b; d[i + 1] = r; d[i + 2] = gr;
+      }
+    }
+    g.putImageData(id, 0, 0);
+    return c;
+  }
+
+  /* registers SHEETS[name] (and recolor variants name~1, name~2) up front so
+     defs can reference them before the image finishes loading */
+  function registerSheet(name, src, variants) {
+    SHEETS[name] = { canvas: null, ready: false };
+    if (variants) {
+      SHEETS[name + "~1"] = { canvas: null, ready: false };
+      SHEETS[name + "~2"] = { canvas: null, ready: false };
+    }
     const img = new Image();
     img.onload = () => {
-      /* the sheets have opaque backgrounds; chroma-key using pixel (0,0) */
       const c = document.createElement("canvas");
       c.width = img.width;
       c.height = img.height;
@@ -130,35 +164,68 @@
       g.drawImage(img, 0, 0);
       const id = g.getImageData(0, 0, c.width, c.height);
       const d = id.data;
-      const bg = [d[0], d[1], d[2]];
-      for (let i = 0; i < d.length; i += 4) {
-        if (Math.abs(d[i] - bg[0]) < 12 && Math.abs(d[i + 1] - bg[1]) < 12 && Math.abs(d[i + 2] - bg[2]) < 12) d[i + 3] = 0;
+      /* sheets with opaque backgrounds get chroma-keyed on pixel (0,0);
+         sheets that already have transparency are left alone */
+      if (d[3] !== 0) {
+        const bg = [d[0], d[1], d[2]];
+        for (let i = 0; i < d.length; i += 4) {
+          if (Math.abs(d[i] - bg[0]) < 12 && Math.abs(d[i + 1] - bg[1]) < 12 && Math.abs(d[i + 2] - bg[2]) < 12) d[i + 3] = 0;
+        }
+        g.putImageData(id, 0, 0);
       }
-      g.putImageData(id, 0, 0);
-      sheet.canvas = c;
-      sheet.ready = true;
+      SHEETS[name].canvas = c;
+      SHEETS[name].ready = true;
+      if (variants) {
+        SHEETS[name + "~1"].canvas = rotChannels(c, 1);
+        SHEETS[name + "~1"].ready = true;
+        SHEETS[name + "~2"].canvas = rotChannels(c, 2);
+        SHEETS[name + "~2"].ready = true;
+      }
     };
     img.src = src;
-    return sheet;
   }
 
-  const SHEETS = {
-    hero: loadSheet("assets/img/sprites/old_hero.png"),
-    pack: loadSheet("assets/img/sprites/baddies.png"),
-  };
+  registerSheet("hero", "assets/img/sprites/old_hero.png", false);
+  registerSheet("pack", "assets/img/sprites/baddies.png", true);
+  registerSheet("dungeon", "assets/img/sprites/dungeon.png", true);
 
-  /* frames are tight [sx, sy, sw, sh] boxes; characters are drawn feet-down */
+  /* GrafxKid characters: tight [sx, sy, sw, sh] frame boxes, drawn feet-down */
   const WALKER_DEFS = [
-    { sheet: "hero", facesLeft: false,
+    { sheet: "hero", facesLeft: false, scale: 3,
       frames: [[19, 33, 11, 15], [35, 32, 12, 15], [52, 33, 9, 15], [67, 33, 11, 15], [83, 32, 12, 15], [99, 33, 12, 15]] },
-    { sheet: "pack", facesLeft: false,
-      frames: [[17, 142, 15, 18], [32, 142, 16, 17], [48, 142, 16, 18]] },
-    { sheet: "pack", facesLeft: true,
+    { sheet: "pack", facesLeft: false, scale: 3,
+      frames: [[20, 147, 9, 13], [35, 146, 11, 13], [52, 147, 9, 13]] },
+    { sheet: "pack", facesLeft: true, scale: 3,
       frames: [[96, 148, 16, 12], [113, 147, 14, 12], [129, 148, 14, 12], [144, 148, 16, 12], [160, 147, 16, 12], [176, 148, 16, 12]] },
-    { sheet: "pack", facesLeft: true,
+    { sheet: "pack", facesLeft: true, scale: 3,
       frames: [[98, 161, 12, 15], [113, 160, 13, 15], [130, 161, 12, 15], [146, 161, 12, 15], [162, 160, 12, 15], [178, 161, 12, 15]] },
   ];
-  const WSCALE = 3;
+
+  /* recolored twins of the two GrafxKid monsters */
+  for (const base of [WALKER_DEFS[2], WALKER_DEFS[3]]) {
+    WALKER_DEFS.push({ sheet: "pack~1", facesLeft: base.facesLeft, scale: base.scale, frames: base.frames });
+    WALKER_DEFS.push({ sheet: "pack~2", facesLeft: base.facesLeft, scale: base.scale, frames: base.frames });
+  }
+
+  /* 0x72 DungeonTileset II run cycles: [x, y, w, h, monster] straight from
+     tiles_list_v1.3 (4 frames each, laid out horizontally, all face right).
+     monster=1 rows also get the two palette-swap recolors. */
+  const DUNGEON_RUNS = [
+    [432, 16, 16, 16, 1], [432, 32, 16, 16, 1], [432, 48, 16, 16, 1], [432, 80, 16, 16, 1],
+    [368, 112, 16, 16, 1], [432, 112, 16, 16, 1], [368, 144, 16, 16, 1], [432, 144, 16, 16, 1],
+    [432, 172, 16, 20, 1], [432, 204, 16, 20, 1], [432, 236, 16, 20, 1], [368, 268, 16, 20, 1],
+    [432, 300, 16, 20, 1], [432, 328, 16, 24, 1],
+    [144, 270, 32, 34, 1], [144, 320, 32, 32, 1], [144, 364, 32, 36, 1],
+    [192, 4, 16, 28, 0], [192, 36, 16, 28, 0], [192, 68, 16, 28, 0], [192, 100, 16, 28, 0],
+    [192, 132, 16, 28, 0], [192, 164, 16, 28, 0], [192, 196, 16, 28, 0], [192, 228, 16, 28, 0],
+  ];
+  for (const [x, y, w, h, monster] of DUNGEON_RUNS) {
+    const frames = [0, 1, 2, 3].map((i) => [x + i * w, y, w, h]);
+    const scale = h > 24 ? 2 : 3;
+    for (const v of monster ? ["", "~1", "~2"] : [""]) {
+      WALKER_DEFS.push({ sheet: "dungeon" + v, facesLeft: false, scale, frames });
+    }
+  }
 
   let walkers = [];
   let lastSpawn = -1e9;
@@ -171,7 +238,7 @@
     const def = WALKER_DEFS[forceDef !== undefined ? forceDef : Math.floor(Math.random() * WALKER_DEFS.length)];
     if (!SHEETS[def.sheet].ready) return;
     const dir = forceDir !== undefined ? forceDir : Math.random() < 0.5 ? -1 : 1;
-    const maxW = Math.max.apply(null, def.frames.map((f) => f[2])) * WSCALE;
+    const maxW = Math.max.apply(null, def.frames.map((f) => f[2])) * def.scale;
     walkers.push({
       def,
       dir,
@@ -183,6 +250,7 @@
     lastSpawn = now;
   }
   window.__bgSpawnWalker = spawnWalker; /* handle for headless tests */
+  window.__bgDefCount = WALKER_DEFS.length;
 
   function drawWalkers(dt) {
     ctx.clearRect(0, 0, W, H);
@@ -206,8 +274,8 @@
       }
       const sheet = SHEETS[wk.def.sheet];
       const f = wk.def.frames[wk.frame];
-      const dw = f[2] * WSCALE;
-      const dh = f[3] * WSCALE;
+      const dw = f[2] * wk.def.scale;
+      const dh = f[3] * wk.def.scale;
       const y = H - 6 - dh;
       const mirror = wk.def.facesLeft ? wk.dir === 1 : wk.dir === -1;
       ctx.save();
