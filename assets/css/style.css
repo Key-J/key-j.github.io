@@ -52,10 +52,23 @@ body {
   overflow: hidden; /* the page never scrolls; the .screen does */
 }
 
+/* ---------------------- background scenery ----------------------
+   Full-screen canvas behind the terminal (digit rain / pixel
+   critters, see bg.js). Decorative only: no pointer events. */
+
+#bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
 /* ------------------------- terminal window ----------------------
    Fixed-size box; internal scrolling only. */
 
 .terminal {
+  position: relative;
+  z-index: 1; /* above the background canvas */
   width: min(88ch, 100%);
   height: min(82dvh, 46rem);
   max-height: 100%;
@@ -65,6 +78,11 @@ body {
   overflow: hidden; /* clip children to the rounded corners */
   display: flex;
   flex-direction: column;
+  box-shadow: 0 8px 40px rgb(1 4 9 / 0.6); /* lift it off the animated bg */
+}
+
+[data-theme="light"] .terminal {
+  box-shadow: 0 8px 40px rgb(88 110 117 / 0.25);
 }
 
 /* ----------------------------- content ---------------------------

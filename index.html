@@ -4,17 +4,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Jackie (Yikun) Wang</title>
-    <meta name="description" content="Jackie (Yikun) Wang — Carnegie Mellon University. Research, projects, and publications." />
+    <meta name="description" content="Jackie (Yikun) Wang — software engineer at Google, incoming Stanford MSCS (AI). Projects, publications, and contact." />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>" />
     <link rel="stylesheet" href="assets/css/style.css" />
   </head>
   <body>
+    <canvas id="bg" aria-hidden="true"></canvas>
     <div class="terminal">
       <main class="screen" id="screen">
         <!-- initial screen: welcome note + command instructions, nothing else -->
         <div id="intro">
           <div class="motd">
-            <p class="banner">Jackie (Yikun) Wang &middot; Carnegie Mellon University</p>
+            <p class="banner">Jackie (Yikun) Wang &middot; SWE @ Google &middot; MSCS @ Stanford (incoming)</p>
             <p>
               Welcome! This page works like a computer <strong>terminal</strong>:
               instead of menus, you give it commands and it prints the answer.
@@ -29,7 +30,7 @@
             </p>
           </div>
 
-          <p class="cmd"><span class="prompt">jackie@cmu:~$</span> help</p>
+          <p class="cmd"><span class="prompt">jackie@google:~$</span> help</p>
           <div class="output">
             <ul class="helplist">
               <li><button class="cmdlink" type="button" data-cmd="whoami">whoami</button><span class="desc">who I am</span></li>
@@ -55,7 +56,7 @@
 
       <footer class="promptbar">
         <form id="prompt-form" autocomplete="off">
-          <label class="prompt" for="cmd-input">jackie@cmu:~$</label>
+          <label class="prompt" for="cmd-input">jackie@google:~$</label>
           <input id="cmd-input" type="text" spellcheck="false" autocapitalize="none"
                  aria-label="Type a command, e.g. help" placeholder="type a command — try 'help'" />
         </form>
@@ -72,16 +73,18 @@
         </figure>
         <div class="facts">
           <h1>Jackie (Yikun) Wang</h1>
-          <p class="tagline">Carnegie Mellon University</p>
+          <p class="tagline">Software Engineer @ Google</p>
           <p>
-            Short bio goes here — a couple of sentences about who you are, what you research,
+            Short bio goes here — a couple of sentences about who you are, what you work on,
             and what you care about. Written for a general audience, no jargon required.
           </p>
           <dl class="kv">
-            <dt>research</dt>
-            <dd>your research area</dd>
+            <dt>work</dt>
+            <dd>Software Engineer, Google</dd>
+            <dt>education</dt>
+            <dd>Carnegie Mellon University ('25) &rarr; Stanford MSCS, AI concentration (HCP, part-time, incoming)</dd>
             <dt>location</dt>
-            <dd>Pittsburgh, PA</dd>
+            <dd>Bay Area, CA</dd>
             <dt>status</dt>
             <dd>open to collaboration</dd>
           </dl>
@@ -91,9 +94,10 @@
 
     <template id="tpl-news">
       <ul class="newslog">
+        <li><time datetime="2026-09">2026-09</time> Starting Stanford's MSCS (AI concentration) part-time through the Honors Cooperative Program.</li>
         <li><time datetime="2026-07">2026-07</time> Launched this website.</li>
-        <li><time datetime="2026-06">2026-06</time> A recent piece of news goes here.</li>
-        <li><time datetime="2026-05">2026-05</time> An older piece of news goes here.</li>
+        <li><time datetime="2026-01">2026-01</time> Joined Google as a software engineer.</li>
+        <li><time datetime="2025-12">2025-12</time> Graduated from Carnegie Mellon University.</li>
       </ul>
     </template>
 
@@ -146,5 +150,6 @@
     </template>
 
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/bg.js"></script>
   </body>
 </html>

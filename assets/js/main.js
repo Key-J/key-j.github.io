@@ -15,6 +15,7 @@
   function setTheme(name) {
     root.dataset.theme = name;
     localStorage.setItem("theme", name);
+    document.dispatchEvent(new CustomEvent("themechange", { detail: name }));
   }
   const saved = localStorage.getItem("theme");
   if (saved) root.dataset.theme = saved;
@@ -28,7 +29,7 @@
   function echoLine(cmdText) {
     const p = document.createElement("p");
     p.className = "cmd";
-    p.innerHTML = '<span class="prompt">jackie@cmu:~$</span> ' + escapeHtml(cmdText);
+    p.innerHTML = '<span class="prompt">jackie@google:~$</span> ' + escapeHtml(cmdText);
     applog.appendChild(p);
     return p;
   }
