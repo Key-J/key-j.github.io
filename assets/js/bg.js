@@ -32,7 +32,7 @@
   /* ---------------- dark theme: digit rain ---------------- */
 
   const CELL = 16;
-  const GLOW_R = 120;
+  const GLOW_R = 60;
   let drops = [];
   let ripples = [];
 

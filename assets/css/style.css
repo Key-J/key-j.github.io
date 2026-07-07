@@ -59,6 +59,11 @@ body {
 #bg {
   position: fixed;
   inset: 0;
+  /* canvas is a replaced element: without explicit dimensions it renders at
+     its intrinsic (devicePixelRatio-scaled) size and overflows the viewport,
+     misplacing everything on scaled displays */
+  width: 100%;
+  height: 100%;
   z-index: 0;
   pointer-events: none;
 }
