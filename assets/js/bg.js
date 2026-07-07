@@ -1,9 +1,9 @@
 /* Background scenery, drawn on a full-screen canvas *behind* the terminal.
-   Dark theme: "digit rain" with bright column heads; the cursor makes nearby
-   digits glow and a click/tap sends out a ripple of bright digits.
-   Light theme: retro pixel scene, plus CC0 sprite characters (GrafxKid,
-   opengameart.org "Classic Hero" + "Classic Hero and Baddies Pack") that
-   occasionally walk across the bottom of the page in response to activity.
+   Dark theme: "digit rain" with bright column heads; a shimmering spotlight
+   of digits follows the cursor and a click/tap sends out a ripple.
+   Light theme: CC0 sprite characters (GrafxKid, opengameart.org
+   "Classic Hero" + "Classic Hero and Baddies Pack") walk across the bottom
+   of the page — one is always around, activity summons more.
    Purely decorative: pointer-events are off and the terminal covers it,
    so it can never interfere with the actual terminal. */
 (function () {
@@ -26,13 +26,13 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false; /* keep pixel art crisp when scaled */
     initRain();
-    initCritters();
+    walkers = [];
   }
 
   /* ---------------- dark theme: digit rain ---------------- */
 
   const CELL = 16;
-  const GLOW_R2 = 130 * 130;
+  const GLOW_R = 120;
   let drops = [];
   let ripples = [];
 
@@ -53,12 +53,6 @@
     return Math.floor(Math.random() * 10).toString();
   }
 
-  function nearPointer(x, y) {
-    const dx = x - pointer.x;
-    const dy = y - pointer.y;
-    return dx * dx + dy * dy < GLOW_R2;
-  }
-
   function drawRain(dt) {
     /* translucent wash of the page bg = the fading trail effect */
     ctx.fillStyle = "rgba(1, 4, 9, 0.1)";
@@ -72,13 +66,34 @@
       const x = i * CELL;
       const headY = d.y * CELL;
       /* the previous head cools down into a regular trail digit */
-      ctx.fillStyle = nearPointer(x, headY - CELL) ? "rgba(126, 231, 135, 0.9)" : "rgba(63, 185, 80, 0.55)";
+      ctx.fillStyle = "rgba(63, 185, 80, 0.55)";
       ctx.fillText(digit(), x, headY - CELL);
-      /* bright leading digit, near-white when the cursor is close */
-      ctx.fillStyle = nearPointer(x, headY) ? "rgba(255, 255, 255, 0.95)" : "rgba(200, 255, 214, 0.85)";
+      /* bright leading digit */
+      ctx.fillStyle = "rgba(200, 255, 214, 0.85)";
       ctx.fillText(digit(), x, headY);
       d.y++;
       if (d.y * CELL > H + CELL && Math.random() > 0.97) d.y = Math.floor(Math.random() * -20);
+    }
+    /* cursor spotlight: a shimmer of bright digits hugging the pointer,
+       redrawn every frame so it tracks the cursor exactly */
+    if (pointer.x > -CELL) {
+      const c0 = Math.max(0, Math.floor((pointer.x - GLOW_R) / CELL));
+      const c1 = Math.min(drops.length - 1, Math.ceil((pointer.x + GLOW_R) / CELL));
+      const r0 = Math.floor((pointer.y - GLOW_R) / CELL);
+      const r1 = Math.ceil((pointer.y + GLOW_R) / CELL);
+      for (let ci = c0; ci <= c1; ci++) {
+        for (let ri = r0; ri <= r1; ri++) {
+          const gx = ci * CELL;
+          const gy = ri * CELL;
+          const dx = gx - pointer.x;
+          const dy = gy - pointer.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 > GLOW_R * GLOW_R || Math.random() > 0.15) continue;
+          const t = 1 - Math.sqrt(d2) / GLOW_R;
+          ctx.fillStyle = "rgba(160, 255, 190, " + (0.2 + 0.65 * t).toFixed(3) + ")";
+          ctx.fillText(digit(), gx, gy);
+        }
+      }
     }
     /* click/tap ripples: an expanding ring of bright digits */
     for (let i = ripples.length - 1; i >= 0; i--) {
@@ -101,70 +116,7 @@
     }
   }
 
-  /* -------------- light theme: pixel critters -------------- */
-
-  /* Solarized accents on the cream background */
-  const PAL = { b: "#268bd2", c: "#2aa198", g: "#859900", m: "#d33682", y: "#b58900", o: "#cb4b16", k: "#586e75", a: "#93a1a1" };
-  const SCALE = 6;
-
-  const ART = {
-    robot: [
-      ["..bbb..", ".bbbbb.", ".bkbkb.", ".bbbbb.", "..yyy..", ".y.y.y.", "..b.b..", "..b.b.."],
-      ["..bbb..", ".bbbbb.", ".bkbkb.", ".bbbbb.", "..yyy..", ".y.y.y.", "..b.b..", ".b...b."],
-    ],
-    slime: [
-      ["..ggg..", ".ggggg.", "ggkgkgg", "ggggggg", "ggggggg"],
-      [".ggggg.", "ggkgkgg", "ggggggg", "ggggggg"],
-    ],
-    ghost: [
-      ["..mmm..", ".mmmmm.", ".mkmkm.", ".mmmmm.", ".mmmmm.", ".m.m.m."],
-      ["..mmm..", ".mmmmm.", ".mkmkm.", ".mmmmm.", ".mmmmm.", "..m.m.."],
-    ],
-    cloud: [["...aaaa....", ".aaaaaaaa..", "aaaaaaaaaaa"]],
-    sun: [["..yyy..", ".yyyyy.", "yyyyyyy", "yyyyyyy", "yyyyyyy", ".yyyyy.", "..yyy.."]],
-  };
-
-  let critters = [];
-  let clouds = [];
-
-  function initCritters() {
-    const types = ["robot", "slime", "ghost"];
-    const n = Math.max(3, Math.min(6, Math.floor(W / 260)));
-    critters = Array.from({ length: n }, (_, i) => ({
-      type: types[i % types.length],
-      x: 20 + Math.random() * Math.max(40, W - 80),
-      dir: Math.random() < 0.5 ? -1 : 1,
-      frame: 0,
-      frameT: Math.random() * 0.25,
-      state: "idle",
-      stateT: 0.5 + Math.random() * 2,
-      bobPhase: Math.random() * Math.PI * 2,
-      baseY: H * (0.2 + Math.random() * 0.55), /* ghosts roam mid-air */
-    }));
-    const cn = Math.max(2, Math.min(5, Math.floor(W / 450)));
-    clouds = Array.from({ length: cn }, () => ({
-      x: Math.random() * W,
-      y: H * (0.04 + Math.random() * 0.15),
-      speed: 6 + Math.random() * 8,
-    }));
-    walkers = [];
-  }
-
-  function drawSprite(art, x, y, dir, alpha) {
-    ctx.globalAlpha = alpha;
-    const w = art[0].length;
-    for (let r = 0; r < art.length; r++) {
-      for (let c = 0; c < w; c++) {
-        const ch = art[r][dir === -1 ? w - 1 - c : c];
-        if (ch === ".") continue;
-        ctx.fillStyle = PAL[ch];
-        ctx.fillRect(Math.round(x) + c * SCALE, Math.round(y) + r * SCALE, SCALE, SCALE);
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  /* ---- walk-by characters (CC0 sprite sheets by GrafxKid) ---- */
+  /* ---- light theme: walk-by characters (CC0 sprites by GrafxKid) ---- */
 
   function loadSheet(src) {
     const sheet = { canvas: null, ready: false };
@@ -210,6 +162,7 @@
 
   let walkers = [];
   let lastSpawn = -1e9;
+  let emptyT = 0;
 
   function spawnWalker(forceDef, forceDir) {
     if (mode !== "light" || walkers.length >= 3) return;
@@ -223,7 +176,7 @@
       def,
       dir,
       x: dir === 1 ? -maxW : W + maxW, /* x is the sprite's center */
-      speed: 40 + Math.random() * 35,
+      speed: 45 + Math.random() * 40,
       frame: 0,
       frameT: 0,
     });
@@ -232,6 +185,17 @@
   window.__bgSpawnWalker = spawnWalker; /* handle for headless tests */
 
   function drawWalkers(dt) {
+    ctx.clearRect(0, 0, W, H);
+    /* keep the scene alive: if nobody is on screen, someone strolls in */
+    if (walkers.length === 0) {
+      emptyT += dt;
+      if (emptyT > 2) {
+        spawnWalker();
+        if (walkers.length > 0) emptyT = 0;
+      }
+    } else {
+      emptyT = 0;
+    }
     for (let i = walkers.length - 1; i >= 0; i--) {
       const wk = walkers[i];
       wk.x += wk.dir * wk.speed * dt;
@@ -260,83 +224,6 @@
     }
   }
 
-  function drawCritters(dt) {
-    ctx.clearRect(0, 0, W, H);
-    const ground = H - 8;
-
-    /* sun in the top-right corner */
-    drawSprite(ART.sun[0], W - 7 * SCALE - 28, 24, 1, 0.55);
-
-    /* clouds drifting across the top */
-    for (const cl of clouds) {
-      cl.x -= cl.speed * dt;
-      if (cl.x < -11 * SCALE - 20) cl.x = W + 20;
-      drawSprite(ART.cloud[0], cl.x, cl.y, 1, 0.5);
-    }
-
-    for (const cr of critters) {
-      cr.frameT += dt;
-      if (cr.frameT > 0.25) {
-        cr.frameT = 0;
-        cr.frame ^= 1;
-      }
-      cr.stateT -= dt;
-      let yoff = 0;
-
-      if (cr.type === "ghost") {
-        /* roams mid-air across the whole page, bobbing */
-        cr.bobPhase += 1.8 * dt;
-        cr.x += cr.dir * 18 * dt;
-        if (cr.stateT <= 0) {
-          cr.stateT = 3 + Math.random() * 6;
-          if (Math.random() < 0.4) cr.dir *= -1;
-        }
-      } else if (cr.type === "slime") {
-        /* hop → rest → hop */
-        if (cr.state === "hop") {
-          const progress = 1 - cr.stateT / 0.45;
-          yoff = Math.sin(Math.PI * Math.min(Math.max(progress, 0), 1)) * 20;
-          cr.x += cr.dir * 70 * dt;
-          if (cr.stateT <= 0) {
-            cr.state = "idle";
-            cr.stateT = 0.6 + Math.random() * 1.8;
-          }
-        } else if (cr.stateT <= 0) {
-          cr.state = "hop";
-          cr.stateT = 0.45;
-          if (Math.random() < 0.25) cr.dir *= -1;
-        }
-        cr.frame = cr.state === "hop" ? 1 : 0;
-      } else {
-        /* robot: walk → pause → walk */
-        if (cr.state === "walk") {
-          cr.x += cr.dir * 28 * dt;
-          if (cr.stateT <= 0) {
-            cr.state = "idle";
-            cr.stateT = 1 + Math.random() * 2.5;
-          }
-        } else {
-          cr.frame = 0;
-          if (cr.stateT <= 0) {
-            cr.state = "walk";
-            cr.stateT = 2 + Math.random() * 3;
-            if (Math.random() < 0.35) cr.dir *= -1;
-          }
-        }
-      }
-
-      const spriteW = 7 * SCALE;
-      if (cr.x < 10) cr.dir = 1;
-      if (cr.x > W - spriteW - 10) cr.dir = -1;
-
-      const art = ART[cr.type][cr.frame];
-      const y = cr.type === "ghost" ? cr.baseY + Math.sin(cr.bobPhase) * 14 : ground - art.length * SCALE - yoff;
-      drawSprite(art, cr.x, y, cr.dir, 0.75);
-    }
-
-    drawWalkers(dt);
-  }
-
   /* ---------------- interaction wiring ---------------- */
   /* Listeners are passive and read-only, so the terminal is unaffected. */
 
@@ -361,6 +248,8 @@
   document.addEventListener(
     "pointerdown",
     (e) => {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
       if (mode === "dark") {
         ripples.push({ x: e.clientX, y: e.clientY, r: 8, age: 0 });
         if (ripples.length > 6) ripples.shift();
@@ -390,7 +279,7 @@
     const dt = Math.min((ts - last) / 1000, 0.05);
     last = ts;
     if (mode === "dark") drawRain(dt);
-    else drawCritters(dt);
+    else drawWalkers(dt);
     requestAnimationFrame(loop);
   }
 
@@ -398,12 +287,12 @@
     mode = e.detail === "light" ? "light" : "dark";
     ctx.clearRect(0, 0, W, H);
     ripples = [];
+    walkers = [];
+    emptyT = 1.5; /* a walk-by greets the light theme almost immediately */
     if (mode === "dark") initRain();
-    else setTimeout(spawnWalker, 1200); /* greet the light theme with a walk-by */
   });
 
   window.addEventListener("resize", resize);
   resize();
-  if (mode === "light") setTimeout(spawnWalker, 1500);
   requestAnimationFrame(loop);
 })();
