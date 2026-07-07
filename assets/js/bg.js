@@ -61,8 +61,8 @@
   /* -------------- light theme: pixel critters -------------- */
 
   /* Solarized accents on the cream background */
-  const PAL = { b: "#268bd2", c: "#2aa198", g: "#859900", m: "#d33682", y: "#b58900", o: "#cb4b16", k: "#586e75" };
-  const SCALE = 4;
+  const PAL = { b: "#268bd2", c: "#2aa198", g: "#859900", m: "#d33682", y: "#b58900", o: "#cb4b16", k: "#586e75", a: "#93a1a1" };
+  const SCALE = 6;
 
   const ART = {
     robot: [
@@ -77,13 +77,16 @@
       ["..mmm..", ".mmmmm.", ".mkmkm.", ".mmmmm.", ".mmmmm.", ".m.m.m."],
       ["..mmm..", ".mmmmm.", ".mkmkm.", ".mmmmm.", ".mmmmm.", "..m.m.."],
     ],
+    cloud: [["...aaaa....", ".aaaaaaaa..", "aaaaaaaaaaa"]],
+    sun: [["..yyy..", ".yyyyy.", "yyyyyyy", "yyyyyyy", "yyyyyyy", ".yyyyy.", "..yyy.."]],
   };
 
   let critters = [];
+  let clouds = [];
 
   function initCritters() {
     const types = ["robot", "slime", "ghost"];
-    const n = Math.max(3, Math.min(7, Math.floor(W / 260)));
+    const n = Math.max(4, Math.min(9, Math.floor(W / 180)));
     critters = Array.from({ length: n }, (_, i) => ({
       type: types[i % types.length],
       x: 20 + Math.random() * Math.max(40, W - 80),
@@ -93,6 +96,13 @@
       state: "idle",
       stateT: 0.5 + Math.random() * 2,
       bobPhase: Math.random() * Math.PI * 2,
+      baseY: H * (0.2 + Math.random() * 0.55), /* ghosts roam mid-air */
+    }));
+    const cn = Math.max(2, Math.min(5, Math.floor(W / 450)));
+    clouds = Array.from({ length: cn }, () => ({
+      x: Math.random() * W,
+      y: H * (0.04 + Math.random() * 0.15),
+      speed: 6 + Math.random() * 8,
     }));
   }
 
@@ -114,6 +124,16 @@
     ctx.clearRect(0, 0, W, H);
     const ground = H - 8;
 
+    /* sun in the top-right corner */
+    drawSprite(ART.sun[0], W - 7 * SCALE - 28, 24, 1, 0.55);
+
+    /* clouds drifting across the top */
+    for (const cl of clouds) {
+      cl.x -= cl.speed * dt;
+      if (cl.x < -11 * SCALE - 20) cl.x = W + 20;
+      drawSprite(ART.cloud[0], cl.x, cl.y, 1, 0.5);
+    }
+
     for (const cr of critters) {
       cr.frameT += dt;
       if (cr.frameT > 0.25) {
@@ -124,10 +144,9 @@
       let yoff = 0;
 
       if (cr.type === "ghost") {
-        /* drifts and bobs forever */
+        /* roams mid-air across the whole page, bobbing */
         cr.bobPhase += 1.8 * dt;
-        cr.x += cr.dir * 13 * dt;
-        yoff = 28 + Math.sin(cr.bobPhase) * 10;
+        cr.x += cr.dir * 18 * dt;
         if (cr.stateT <= 0) {
           cr.stateT = 3 + Math.random() * 6;
           if (Math.random() < 0.4) cr.dir *= -1;
@@ -136,8 +155,8 @@
         /* hop → rest → hop */
         if (cr.state === "hop") {
           const progress = 1 - cr.stateT / 0.45;
-          yoff = Math.sin(Math.PI * Math.min(Math.max(progress, 0), 1)) * 14;
-          cr.x += cr.dir * 55 * dt;
+          yoff = Math.sin(Math.PI * Math.min(Math.max(progress, 0), 1)) * 20;
+          cr.x += cr.dir * 70 * dt;
           if (cr.stateT <= 0) {
             cr.state = "idle";
             cr.stateT = 0.6 + Math.random() * 1.8;
@@ -151,7 +170,7 @@
       } else {
         /* robot: walk → pause → walk */
         if (cr.state === "walk") {
-          cr.x += cr.dir * 22 * dt;
+          cr.x += cr.dir * 28 * dt;
           if (cr.stateT <= 0) {
             cr.state = "idle";
             cr.stateT = 1 + Math.random() * 2.5;
@@ -171,7 +190,8 @@
       if (cr.x > W - spriteW - 10) cr.dir = -1;
 
       const art = ART[cr.type][cr.frame];
-      drawSprite(art, cr.x, ground - art.length * SCALE - yoff, cr.dir, 0.55);
+      const y = cr.type === "ghost" ? cr.baseY + Math.sin(cr.bobPhase) * 14 : ground - art.length * SCALE - yoff;
+      drawSprite(art, cr.x, y, cr.dir, 0.75);
     }
   }
 
