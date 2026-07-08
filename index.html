@@ -23,45 +23,49 @@
         <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">[light]</button>
       </div>
       <main class="screen" id="screen">
-        <!-- initial screen: welcome note + command instructions, nothing else -->
-        <div id="intro">
-          <div class="motd">
-            <p class="banner">Jackie (Yikun) Wang &middot; SWE @ Google &middot; MSCS @ Stanford (incoming)</p>
-            <p>
-              Welcome! This page works like a computer <strong>terminal</strong>:
-              instead of menus, you give it commands and it prints the answer.
-            </p>
-            <ol class="howto">
-              <li>click any <span class="fake-cmdlink">green command</span> below, or</li>
-              <li>type it in the box at the bottom and press <kbd>Enter</kbd>.</li>
-            </ol>
-            <p>
-              Nothing to install and nothing can break — try
-              <button class="cmdlink" type="button" data-cmd="whoami">whoami</button> to start.
-            </p>
-          </div>
-
-          <p class="cmd"><span class="prompt"><span class="p-host">jackie@google</span>:<span class="p-path">~</span>$</span> help</p>
+        <!-- pinned: the terminal "already ran" whoami on boot. Static HTML
+             (not a template) so the bio is visible without JS and to
+             crawlers; main.js only animates its reveal. -->
+        <div id="boot">
+          <p class="cmd"><span class="prompt"><span class="p-host">jackie@google</span>:<span class="p-path">~</span>$</span> whoami</p>
           <div class="output">
-            <ul class="helplist">
-              <li><button class="cmdlink" type="button" data-cmd="whoami">whoami</button><span class="desc">who I am</span></li>
-              <li><button class="cmdlink" type="button" data-cmd="news">news</button><span class="desc">recent updates</span></li>
-              <li><button class="cmdlink" type="button" data-cmd="projects">projects</button><span class="desc">what I'm building</span></li>
-              <li><button class="cmdlink" type="button" data-cmd="publications">publications</button><span class="desc">papers</span></li>
-              <li><button class="cmdlink" type="button" data-cmd="contact">contact</button><span class="desc">how to reach me</span></li>
-              <li><button class="cmdlink" type="button" data-cmd="theme">theme</button><span class="desc">switch dark / light colors</span></li>
-              <li><button class="cmdlink" type="button" data-cmd="clear">clear</button><span class="desc">wipe the screen</span></li>
-              <li><button class="cmdlink" type="button" data-cmd="help">help</button><span class="desc">show this list again</span></li>
-            </ul>
-            <noscript>
-              <p>This site needs JavaScript for the interactive commands.
-                 Meanwhile: <a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a> &middot;
-                 <a href="https://github.com/Key-J">github.com/Key-J</a></p>
-            </noscript>
+            <div class="about-grid">
+              <figure class="imgframe">
+                <figcaption class="cmd small"><span class="prompt">$</span> imgcat portrait.jpg</figcaption>
+                <img src="assets/img/portrait.jpg" alt="Portrait of Jackie Wang" width="1279" height="1765" />
+              </figure>
+              <div class="facts">
+                <h1>Jackie (Yikun) Wang</h1>
+                <p class="tagline">Software Engineer @ Google</p>
+                <p>
+                  Short bio goes here — a couple of sentences about who you are, what you work on,
+                  and what you care about. Written for a general audience, no jargon required.
+                </p>
+                <dl class="kv">
+                  <dt>work</dt>
+                  <dd>Software Engineer, Google</dd>
+                  <dt>education</dt>
+                  <dd>Carnegie Mellon University ('25) &rarr; Stanford MSCS, AI concentration (HCP, part-time, incoming)</dd>
+                  <dt>location</dt>
+                  <dd>Bay Area, CA</dd>
+                  <dt>status</dt>
+                  <dd>open to collaboration</dd>
+                </dl>
+              </div>
+            </div>
           </div>
+          <p class="hint">
+            type <button class="cmdlink" type="button" data-cmd="help">help</button> (or click it)
+            to see what else this terminal can do
+          </p>
+          <noscript>
+            <p>JavaScript is off, so the interactive commands won't run.
+               Reach me: <a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a> &middot;
+               <a href="https://github.com/Key-J">github.com/Key-J</a></p>
+          </noscript>
         </div>
 
-        <!-- command output is appended here by main.js -->
+        <!-- transient: only the most recent command's output lives here -->
         <div id="applog" aria-live="polite"></div>
       </main>
 
@@ -79,31 +83,17 @@
 
     <!-- ================= section content (printed on demand) ================= -->
 
-    <template id="tpl-about">
-      <div class="about-grid">
-        <figure class="imgframe">
-          <figcaption class="cmd small"><span class="prompt">$</span> imgcat portrait.jpg</figcaption>
-          <img src="assets/img/portrait.jpg" alt="Portrait of Jackie Wang" width="1279" height="1765" />
-        </figure>
-        <div class="facts">
-          <h1>Jackie (Yikun) Wang</h1>
-          <p class="tagline">Software Engineer @ Google</p>
-          <p>
-            Short bio goes here — a couple of sentences about who you are, what you work on,
-            and what you care about. Written for a general audience, no jargon required.
-          </p>
-          <dl class="kv">
-            <dt>work</dt>
-            <dd>Software Engineer, Google</dd>
-            <dt>education</dt>
-            <dd>Carnegie Mellon University ('25) &rarr; Stanford MSCS, AI concentration (HCP, part-time, incoming)</dd>
-            <dt>location</dt>
-            <dd>Bay Area, CA</dd>
-            <dt>status</dt>
-            <dd>open to collaboration</dd>
-          </dl>
-        </div>
-      </div>
+    <template id="tpl-help">
+      <ul class="helplist">
+        <li><button class="cmdlink" type="button" data-cmd="whoami">whoami</button><span class="desc">who I am (back to the top)</span></li>
+        <li><button class="cmdlink" type="button" data-cmd="news">news</button><span class="desc">recent updates</span></li>
+        <li><button class="cmdlink" type="button" data-cmd="projects">projects</button><span class="desc">what I'm building</span></li>
+        <li><button class="cmdlink" type="button" data-cmd="publications">publications</button><span class="desc">papers</span></li>
+        <li><button class="cmdlink" type="button" data-cmd="contact">contact</button><span class="desc">how to reach me</span></li>
+        <li><button class="cmdlink" type="button" data-cmd="theme">theme</button><span class="desc">switch dark / light colors</span></li>
+        <li><button class="cmdlink" type="button" data-cmd="clear">clear</button><span class="desc">wipe the screen</span></li>
+        <li><button class="cmdlink" type="button" data-cmd="help">help</button><span class="desc">show this list again</span></li>
+      </ul>
     </template>
 
     <template id="tpl-news">

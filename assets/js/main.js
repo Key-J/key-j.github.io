@@ -2,12 +2,10 @@
   const root = document.documentElement;
   const screen = document.getElementById("screen");
   const applog = document.getElementById("applog");
-  const intro = document.getElementById("intro");
-  const helpOutput = intro.querySelector(".output");
   const form = document.getElementById("prompt-form");
   const input = document.getElementById("cmd-input");
 
-  const SECTIONS = ["about", "news", "projects", "publications", "contact"];
+  const SECTIONS = ["news", "projects", "publications", "contact"];
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------------- theme ---------------- */
@@ -121,8 +119,11 @@
     screen.scrollTo({ top: p.offsetTop - 8, behavior: reducedMotion ? "auto" : "smooth" });
   }
 
-  /* content: an HTML string (rendered) or a Node (appended) */
+  /* content: an HTML string (rendered) or a Node (appended).
+     The log is transient — each command replaces the previous one's
+     echo + output; only the pinned #boot block above survives. */
   function echo(cmdText, content, opts) {
+    applog.innerHTML = "";
     const ticks = [];
     const p = echoLine(cmdText);
     if (content != null) {
@@ -150,8 +151,11 @@
     const arg = (args[0] || "").replace(/\/+$/, "").toLowerCase();
     const name = cmd.toLowerCase();
 
+    /* whoami is pinned at the top, not re-printed: wipe the transient
+       output and scroll back up to it */
     if (name === "whoami" || name === "about") {
-      echo(line, sectionContent("about"));
+      applog.innerHTML = "";
+      screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
       return;
     }
     if (SECTIONS.includes(name)) {
@@ -161,23 +165,19 @@
 
     switch (name) {
       case "help":
-      case "?": {
-        const ticks = [];
-        const p = echoLine(line);
-        const out = helpOutput.cloneNode(true);
-        applog.appendChild(out);
-        ticks.push(...revealTicks(out));
-        scrollToLine(p);
-        playTicks(ticks);
+      case "?":
+        echo(line, sectionContent("help"));
         break;
-      }
 
       case "cd": {
         const target = arg === "" || arg === "~" ? "about" : arg;
-        if (SECTIONS.includes(target)) {
+        if (target === "about") {
+          applog.innerHTML = "";
+          screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+        } else if (SECTIONS.includes(target)) {
           echo(line, sectionContent(target));
         } else {
-          echo(line, "cd: no such directory: " + escapeHtml(arg) + " — try one of: " + SECTIONS.join(", "), { error: true });
+          echo(line, "cd: no such directory: " + escapeHtml(arg) + " — try one of: about, " + SECTIONS.join(", "), { error: true });
         }
         break;
       }
@@ -188,7 +188,6 @@
         break;
 
       case "clear":
-        intro.hidden = true;
         applog.innerHTML = "";
         screen.scrollTo({ top: 0 });
         break;
@@ -288,6 +287,28 @@
     input.focus();
   }
 
-  /* the intro prints itself on load, same as any command output */
-  playTicks(revealTicks(intro));
+  /* boot: the terminal runs `whoami` itself — types it into the prompt,
+     "presses Enter", then streams the pinned #boot block (which is
+     static HTML, so it's simply hidden and revealed row by row) */
+  const bootTicks = revealTicks(document.getElementById("boot"));
+  const ticks = [{ delay: 0, fn: () => {} }]; // beat before typing starts
+  for (const ch of "whoami") {
+    ticks.push({
+      delay: TYPE_MS,
+      fn: () => {
+        input.value += ch;
+        syncCursor();
+      },
+    });
+  }
+  ticks[1].delay = 400;
+  ticks.push({
+    delay: ENTER_MS,
+    fn: () => {
+      input.value = "";
+      syncCursor();
+    },
+  });
+  ticks.push(...bootTicks);
+  playTicks(ticks);
 })();
