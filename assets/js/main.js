@@ -42,14 +42,14 @@
 
   /* ---------------- typewriter reveal ----------------
      Output streams in line by line like a real terminal; a command run
-     by clicking (not typing) is first "typed" into its echoed prompt.
-     Any key or click skips to the end of the current reveal. */
+     by clicking (not typing) is first typed into the real prompt and
+     submitted. Any key or click skips to the end of the current reveal. */
 
   const REVEAL_MS = 70; // per output line
-  const TYPE_MS = 30; // per character of a clicked command's echo
+  const TYPE_MS = 30; // per character typed into the prompt for a click
+  const ENTER_MS = 150; // beat between the last character and "Enter"
 
   let activeReveal = null;
-  let echoTyping = false; // true while running a command from a click
 
   function finishReveal() {
     if (activeReveal) {
@@ -69,17 +69,20 @@
     }
     let i = 0;
     let timer = 0;
-    function step() {
-      ticks[i++].fn();
-      if (i < ticks.length) timer = setTimeout(step, ticks[i].delay);
-      else activeReveal = null;
-    }
-    activeReveal = {
+    const reveal = {
       finish() {
         clearTimeout(timer);
         while (i < ticks.length) ticks[i++].fn();
       },
     };
+    function step() {
+      ticks[i++].fn();
+      if (i < ticks.length) timer = setTimeout(step, ticks[i].delay);
+      /* a tick can start a nested reveal (the Enter tick submits a
+         command), which becomes activeReveal — don't clobber it */
+      else if (activeReveal === reveal) activeReveal = null;
+    }
+    activeReveal = reveal;
     step();
   }
 
@@ -104,16 +107,10 @@
     return rows.map((r) => ({ delay: REVEAL_MS, fn: () => r.classList.remove("pre-reveal") }));
   }
 
-  function echoLine(cmdText, ticks) {
+  function echoLine(cmdText) {
     const p = document.createElement("p");
     p.className = "cmd";
-    if (ticks && echoTyping && !reducedMotion) {
-      p.innerHTML = PS1 + " <span></span>";
-      const span = p.lastElementChild;
-      for (const ch of cmdText) ticks.push({ delay: TYPE_MS, fn: () => (span.textContent += ch) });
-    } else {
-      p.innerHTML = PS1 + " " + escapeHtml(cmdText);
-    }
+    p.innerHTML = PS1 + " " + escapeHtml(cmdText);
     applog.appendChild(p);
     return p;
   }
@@ -127,7 +124,7 @@
   /* content: an HTML string (rendered) or a Node (appended) */
   function echo(cmdText, content, opts) {
     const ticks = [];
-    const p = echoLine(cmdText, ticks);
+    const p = echoLine(cmdText);
     if (content != null) {
       const div = document.createElement("div");
       div.className = "output" + (opts && opts.error ? " text error" : typeof content === "string" && opts && opts.text ? " text" : "");
@@ -166,7 +163,7 @@
       case "help":
       case "?": {
         const ticks = [];
-        const p = echoLine(line, ticks);
+        const p = echoLine(line);
         const out = helpOutput.cloneNode(true);
         applog.appendChild(out);
         ticks.push(...revealTicks(out));
@@ -218,15 +215,29 @@
     }
   }
 
-  /* clicking a command name runs it (works inside intro, help output, etc.);
-     the visitor didn't type it, so the echo types itself */
+  /* clicking a command name types it into the real prompt and submits,
+     so it enters the terminal the same way a typed command does */
+  function typeAndRun(cmdText) {
+    input.focus();
+    input.value = "";
+    syncCursor();
+    const ticks = [];
+    for (const ch of cmdText) {
+      ticks.push({
+        delay: TYPE_MS,
+        fn: () => {
+          input.value += ch;
+          syncCursor();
+        },
+      });
+    }
+    ticks.push({ delay: ENTER_MS, fn: () => form.requestSubmit() });
+    playTicks(ticks);
+  }
+
   screen.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-cmd]");
-    if (btn) {
-      echoTyping = true;
-      run(btn.dataset.cmd);
-      echoTyping = false;
-    }
+    if (btn) typeAndRun(btn.dataset.cmd);
   });
 
   /* ---------------- input handling ---------------- */
