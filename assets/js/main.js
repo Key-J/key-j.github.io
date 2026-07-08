@@ -59,10 +59,6 @@
 
   /* ---------------- commands ---------------- */
 
-  function projectNames() {
-    return Array.from(document.getElementById("tpl-projects").content.querySelectorAll(".card h2 a")).map((a) => a.textContent.trim());
-  }
-
   function run(raw) {
     const line = raw.trim();
     if (!line) return;
@@ -97,14 +93,6 @@
         }
         break;
       }
-
-      case "ls":
-        if (arg === "projects") {
-          echo(line, projectNames().map(escapeHtml).join("\n"), { text: true });
-        } else {
-          echo(line, SECTIONS.map((s) => s + "/").join("  "), { text: true });
-        }
-        break;
 
       case "theme":
         if (arg === "dark" || arg === "light") setTheme(arg);
