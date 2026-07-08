@@ -15,6 +15,12 @@
   <body>
     <canvas id="bg" aria-hidden="true"></canvas>
     <div class="terminal">
+      <div class="titlebar" aria-hidden="true">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+        <span class="title">jackie@google: ~ — zsh</span>
+      </div>
       <main class="screen" id="screen">
         <!-- initial screen: welcome note + command instructions, nothing else -->
         <div id="intro">
@@ -34,7 +40,7 @@
             </p>
           </div>
 
-          <p class="cmd"><span class="prompt">jackie@google:~$</span> help</p>
+          <p class="cmd"><span class="prompt"><span class="p-host">jackie@google</span>:<span class="p-path">~</span>$</span> help</p>
           <div class="output">
             <ul class="helplist">
               <li><button class="cmdlink" type="button" data-cmd="whoami">whoami</button><span class="desc">who I am</span></li>
@@ -60,9 +66,12 @@
 
       <footer class="promptbar">
         <form id="prompt-form" autocomplete="off">
-          <label class="prompt" for="cmd-input">jackie@google:~$</label>
-          <input id="cmd-input" type="text" spellcheck="false" autocapitalize="none"
-                 aria-label="Type a command, e.g. help" placeholder="type a command — try 'help'" />
+          <label class="prompt" for="cmd-input"><span class="p-host">jackie@google</span>:<span class="p-path">~</span>$</label>
+          <span class="inputwrap">
+            <input id="cmd-input" type="text" spellcheck="false" autocapitalize="none"
+                   aria-label="Type a command, e.g. help" placeholder="type a command — try 'help'" />
+            <span class="cursor" id="cmd-cursor" aria-hidden="true"></span>
+          </span>
         </form>
       </footer>
     </div>

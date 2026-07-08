@@ -26,10 +26,12 @@
     return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   }
 
+  const PS1 = '<span class="prompt"><span class="p-host">jackie@google</span>:<span class="p-path">~</span>$</span>';
+
   function echoLine(cmdText) {
     const p = document.createElement("p");
     p.className = "cmd";
-    p.innerHTML = '<span class="prompt">jackie@google:~$</span> ' + escapeHtml(cmdText);
+    p.innerHTML = PS1 + " " + escapeHtml(cmdText);
     applog.appendChild(p);
     return p;
   }
@@ -147,6 +149,7 @@
       run(line);
     }
     input.value = "";
+    syncCursor();
   });
 
   input.addEventListener("keydown", (e) => {
@@ -158,6 +161,17 @@
       e.preventDefault();
     }
   });
+
+  /* the blinking block cursor tracks the real caret (ch works: mono font) */
+  const cursor = document.getElementById("cmd-cursor");
+  function syncCursor() {
+    cursor.style.left = (input.selectionStart || 0) + "ch";
+  }
+  ["input", "focus", "click", "keyup"].forEach((ev) => input.addEventListener(ev, syncCursor));
+  document.addEventListener("selectionchange", () => {
+    if (document.activeElement === input) syncCursor();
+  });
+  syncCursor();
 
   /* keyboard users can start typing from anywhere; skip when a fine
      pointer isn't guaranteed (touch) so the keyboard doesn't pop up */
