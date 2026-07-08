@@ -9,7 +9,7 @@
    ================================================================ */
 
 :root {
-  --font: "JetBrains Mono", ui-monospace, "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
+  --font: ui-monospace, "Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
   --bg: #010409;
   --panel: #0d1117;
   --panel-2: #161b22;
@@ -44,7 +44,7 @@ html {
 }
 
 html[data-theme="light"] {
-  font-size: clamp(17px, 1.2vw + 0.65rem, 22px);
+  font-size: clamp(19px, 1.4vw + 0.7rem, 25px);
 }
 
 body {
@@ -236,7 +236,9 @@ kbd {
 
 .helplist li {
   display: grid;
-  grid-template-columns: minmax(12ch, max-content) 1fr;
+  /* fixed first column (fits "> publications") so every row lines up;
+     max-content would let long names widen their own row only */
+  grid-template-columns: 15ch 1fr;
   gap: 2ch;
   align-items: baseline;
 }
