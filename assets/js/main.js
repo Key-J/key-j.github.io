@@ -2,6 +2,7 @@
   const root = document.documentElement;
   const screen = document.getElementById("screen");
   const applog = document.getElementById("applog");
+  const boot = document.getElementById("boot");
   const form = document.getElementById("prompt-form");
   const input = document.getElementById("cmd-input");
 
@@ -120,9 +121,10 @@
   }
 
   /* content: an HTML string (rendered) or a Node (appended).
-     The log is transient — each command replaces the previous one's
-     echo + output; only the pinned #boot block above survives. */
+     One page at a time: each command replaces whatever is on screen,
+     including the whoami block. */
   function echo(cmdText, content, opts) {
+    boot.hidden = true;
     applog.innerHTML = "";
     const ticks = [];
     const p = echoLine(cmdText);
@@ -148,6 +150,16 @@
     statusbar.querySelectorAll("[data-cmd]").forEach((b) => b.classList.toggle("active", b.dataset.cmd === name));
   }
 
+  /* whoami is the static #boot block, not a template — re-running it
+     re-shows that block with the same echo + streamed reveal */
+  function showWhoami() {
+    applog.innerHTML = "";
+    boot.hidden = false;
+    screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+    setActive("whoami");
+    playTicks(revealTicks(boot));
+  }
+
   /* ---------------- commands ---------------- */
 
   function run(raw) {
@@ -157,12 +169,8 @@
     const arg = (args[0] || "").replace(/\/+$/, "").toLowerCase();
     const name = cmd.toLowerCase();
 
-    /* whoami is pinned at the top, not re-printed: wipe the transient
-       output and scroll back up to it */
     if (name === "whoami" || name === "about") {
-      applog.innerHTML = "";
-      screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
-      setActive("whoami");
+      showWhoami();
       return;
     }
     if (SECTIONS.includes(name)) {
@@ -181,9 +189,7 @@
       case "cd": {
         const target = arg === "" || arg === "~" ? "about" : arg;
         if (target === "about") {
-          applog.innerHTML = "";
-          screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
-          setActive("whoami");
+          showWhoami();
         } else if (SECTIONS.includes(target)) {
           echo(line, sectionContent(target));
           setActive(target);
@@ -199,9 +205,12 @@
         break;
 
       case "clear":
+        /* a real clear: blank screen, and no page marked in the status
+           line because none is showing */
+        boot.hidden = true;
         applog.innerHTML = "";
         screen.scrollTo({ top: 0 });
-        setActive("whoami"); /* the screen is back to just the pinned bio */
+        setActive("");
         break;
 
       case "top":
@@ -301,9 +310,9 @@
   }
 
   /* boot: the terminal runs `whoami` itself — types it into the prompt,
-     "presses Enter", then streams the pinned #boot block (which is
-     static HTML, so it's simply hidden and revealed row by row) */
-  const bootTicks = revealTicks(document.getElementById("boot"));
+     "presses Enter", then streams the #boot block (which is static
+     HTML, so it's simply hidden and revealed row by row) */
+  const bootTicks = revealTicks(boot);
   const ticks = [{ delay: 0, fn: () => {} }]; // beat before typing starts
   for (const ch of "whoami") {
     ticks.push({

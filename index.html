@@ -23,9 +23,9 @@
         <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">[light]</button>
       </div>
       <main class="screen" id="screen">
-        <!-- pinned: the terminal "already ran" whoami on boot. Static HTML
-             (not a template) so the bio is visible without JS and to
-             crawlers; main.js only animates its reveal. -->
+        <!-- the whoami page. Static HTML (not a template) so the bio is
+             visible without JS and to crawlers; it's the page shown on
+             boot, and main.js hides/re-reveals it like any other page. -->
         <div id="boot">
           <p class="cmd"><span class="prompt"><span class="p-host">jackie@google</span>:<span class="p-path">~</span>$</span> whoami</p>
           <div class="output">
@@ -61,7 +61,7 @@
           </noscript>
         </div>
 
-        <!-- transient: only the most recent command's output lives here -->
+        <!-- every other page prints here; one command's output at a time -->
         <div id="applog" aria-live="polite"></div>
       </main>
 
