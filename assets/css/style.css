@@ -10,6 +10,7 @@
 
 :root {
   --font: ui-monospace, "Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+  --lh: 1.6;
   --bg: #010409;
   --panel: #0d1117;
   --panel-2: #161b22;
@@ -22,8 +23,11 @@
 
 [data-theme="light"] {
   /* retro pixel font to match the walk-by sprites; VT323 renders small,
-     so the root font-size is bumped below to compensate */
+     so the root font-size is bumped below to compensate. It's compact,
+     so a tighter line-height keeps row spacing ~equal to the dark theme
+     in absolute pixels (1.2 × 25px ≈ 1.6 × 18px). */
   --font: "VT323", ui-monospace, Menlo, Consolas, monospace;
+  --lh: 1.2;
   --bg: #eee8d5;
   --panel: #fdf6e3;
   --panel-2: #f3edd9;
@@ -56,7 +60,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font);
-  line-height: 1.6;
+  line-height: var(--lh);
   overflow: hidden; /* the page never scrolls; the .screen does */
 }
 
@@ -231,7 +235,7 @@ kbd {
   margin: 0.75rem 0 0;
   padding: 0;
   display: grid;
-  gap: 0.3rem;
+  gap: 5px; /* px so row pitch matches across themes */
 }
 
 .helplist li {
