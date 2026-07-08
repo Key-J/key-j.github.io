@@ -142,6 +142,12 @@
     return document.getElementById("tpl-" + name).content.cloneNode(true);
   }
 
+  /* mark the current page in the status line, tmux-style */
+  const statusbar = document.getElementById("statusbar");
+  function setActive(name) {
+    statusbar.querySelectorAll("[data-cmd]").forEach((b) => b.classList.toggle("active", b.dataset.cmd === name));
+  }
+
   /* ---------------- commands ---------------- */
 
   function run(raw) {
@@ -156,10 +162,12 @@
     if (name === "whoami" || name === "about") {
       applog.innerHTML = "";
       screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+      setActive("whoami");
       return;
     }
     if (SECTIONS.includes(name)) {
       echo(line, sectionContent(name));
+      setActive(name);
       return;
     }
 
@@ -167,6 +175,7 @@
       case "help":
       case "?":
         echo(line, sectionContent("help"));
+        setActive("help");
         break;
 
       case "cd": {
@@ -174,8 +183,10 @@
         if (target === "about") {
           applog.innerHTML = "";
           screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+          setActive("whoami");
         } else if (SECTIONS.includes(target)) {
           echo(line, sectionContent(target));
+          setActive(target);
         } else {
           echo(line, "cd: no such directory: " + escapeHtml(arg) + " — try one of: about, " + SECTIONS.join(", "), { error: true });
         }
@@ -190,6 +201,7 @@
       case "clear":
         applog.innerHTML = "";
         screen.scrollTo({ top: 0 });
+        setActive("whoami"); /* the screen is back to just the pinned bio */
         break;
 
       case "top":
@@ -234,7 +246,8 @@
     playTicks(ticks);
   }
 
-  screen.addEventListener("click", (e) => {
+  /* document-level so it covers the status line, not just the screen */
+  document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-cmd]");
     if (btn) typeAndRun(btn.dataset.cmd);
   });

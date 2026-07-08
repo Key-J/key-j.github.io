@@ -54,10 +54,6 @@
               </div>
             </div>
           </div>
-          <p class="hint">
-            type <button class="cmdlink" type="button" data-cmd="help">help</button> (or click it)
-            to see what else this terminal can do
-          </p>
           <noscript>
             <p>JavaScript is off, so the interactive commands won't run.
                Reach me: <a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a> &middot;
@@ -79,6 +75,19 @@
           </span>
         </form>
       </footer>
+
+      <!-- tmux-style status line: every command, always visible; the
+           current page is marked like tmux's active window (*) -->
+      <nav class="statusbar" id="statusbar" aria-label="Commands">
+        <button type="button" data-cmd="whoami" class="active">whoami</button>
+        <button type="button" data-cmd="news">news</button>
+        <button type="button" data-cmd="projects">projects</button>
+        <button type="button" data-cmd="publications">publications</button>
+        <button type="button" data-cmd="contact">contact</button>
+        <button type="button" data-cmd="theme">theme</button>
+        <button type="button" data-cmd="clear">clear</button>
+        <button type="button" data-cmd="help">help</button>
+      </nav>
     </div>
 
     <!-- ================= section content (printed on demand) ================= -->

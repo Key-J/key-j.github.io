@@ -247,12 +247,6 @@ h2 {
 
 /* ------------------------- boot / help list ---------------------- */
 
-/* one always-visible pointer back to `help`, pinned under whoami */
-.hint {
-  margin: 1.25rem 0 0;
-  color: var(--dim);
-}
-
 .helplist {
   list-style: none;
   margin: 0.75rem 0 0;
@@ -524,6 +518,42 @@ h2 {
 #cmd-input::placeholder {
   color: var(--dim);
   opacity: 0.7;
+}
+
+/* --------------------- status line (tmux-style) ------------------
+   Window chrome like the titlebar: fixed px sizing, identical in
+   both themes. Lists every command; * marks the current page. */
+
+.statusbar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  padding: 6px 14px;
+  background: var(--panel-2);
+  border-top: 1px solid var(--border);
+}
+
+.statusbar button {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace;
+  color: var(--dim);
+}
+
+.statusbar button:hover,
+.statusbar button:focus-visible {
+  color: var(--fg);
+}
+
+.statusbar button.active {
+  color: var(--accent);
+}
+
+.statusbar button.active::after {
+  content: "*";
 }
 
 @media (prefers-reduced-motion: reduce) {
