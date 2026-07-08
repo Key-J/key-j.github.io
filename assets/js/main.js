@@ -20,6 +20,18 @@
   const saved = localStorage.getItem("theme");
   if (saved) root.dataset.theme = saved;
 
+  /* titlebar toggle, labeled with the theme it switches TO; the `theme`
+     command routes through setTheme too, so themechange keeps it in sync */
+  const themeBtn = document.getElementById("theme-toggle");
+  function syncThemeBtn() {
+    const next = root.dataset.theme === "light" ? "dark" : "light";
+    themeBtn.textContent = "[" + next + "]";
+    themeBtn.setAttribute("aria-label", "Switch to " + next + " theme");
+  }
+  themeBtn.addEventListener("click", () => setTheme(root.dataset.theme === "light" ? "dark" : "light"));
+  document.addEventListener("themechange", syncThemeBtn);
+  syncThemeBtn();
+
   /* ---------------- output helpers ---------------- */
 
   function escapeHtml(s) {

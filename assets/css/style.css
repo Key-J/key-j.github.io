@@ -141,6 +141,22 @@ body {
   white-space: nowrap;
 }
 
+/* theme switch: labeled with the theme it switches TO */
+.theme-toggle {
+  margin-left: auto; /* right end of the titlebar */
+  border: 0;
+  padding: 2px 4px;
+  background: none;
+  font: 12px/1 ui-monospace, Menlo, Consolas, monospace;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  color: var(--fg);
+}
+
 /* ----------------------------- content ---------------------------
    The scrollback: the only scrollable region. */
 

@@ -15,11 +15,12 @@
   <body>
     <canvas id="bg" aria-hidden="true"></canvas>
     <div class="terminal">
-      <div class="titlebar" aria-hidden="true">
-        <span class="dot dot-red"></span>
-        <span class="dot dot-yellow"></span>
-        <span class="dot dot-green"></span>
-        <span class="title">jackie@google: ~ — zsh</span>
+      <div class="titlebar">
+        <span class="dot dot-red" aria-hidden="true"></span>
+        <span class="dot dot-yellow" aria-hidden="true"></span>
+        <span class="dot dot-green" aria-hidden="true"></span>
+        <span class="title" aria-hidden="true">jackie@google: ~ — zsh</span>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">[light]</button>
       </div>
       <main class="screen" id="screen">
         <!-- initial screen: welcome note + command instructions, nothing else -->
