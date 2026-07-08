@@ -9,6 +9,7 @@
    ================================================================ */
 
 :root {
+  --font: "JetBrains Mono", ui-monospace, "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
   --bg: #010409;
   --panel: #0d1117;
   --panel-2: #161b22;
@@ -20,6 +21,9 @@
 }
 
 [data-theme="light"] {
+  /* retro pixel font to match the walk-by sprites; VT323 renders small,
+     so the root font-size is bumped below to compensate */
+  --font: "VT323", ui-monospace, Menlo, Consolas, monospace;
   --bg: #eee8d5;
   --panel: #fdf6e3;
   --panel-2: #f3edd9;
@@ -39,6 +43,10 @@ html {
   font-size: clamp(14px, 1vw + 0.55rem, 18px);
 }
 
+html[data-theme="light"] {
+  font-size: clamp(17px, 1.2vw + 0.65rem, 22px);
+}
+
 body {
   margin: 0;
   height: 100dvh;
@@ -47,7 +55,7 @@ body {
   place-items: center; /* terminal centered both ways */
   background: var(--bg);
   color: var(--fg);
-  font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+  font-family: var(--font);
   line-height: 1.6;
   overflow: hidden; /* the page never scrolls; the .screen does */
 }
