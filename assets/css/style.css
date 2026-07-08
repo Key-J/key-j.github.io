@@ -50,7 +50,7 @@ html[data-theme="light"] {
 body {
   margin: 0;
   height: 100dvh;
-  padding: clamp(0.75rem, 2.5vw, 2.5rem);
+  padding: clamp(11px, 2.5vw, 45px); /* px so both themes' boxes match exactly */
   display: grid;
   place-items: center; /* terminal centered both ways */
   background: var(--bg);
@@ -82,8 +82,10 @@ body {
 .terminal {
   position: relative;
   z-index: 1; /* above the background canvas */
-  width: min(88ch, 100%);
-  height: min(82dvh, 46rem);
+  /* px caps (not ch/rem) so the box is identical in both themes, whose
+     fonts and root sizes differ; matches 88ch/46rem of the dark theme */
+  width: min(950px, 100%);
+  height: min(82dvh, 830px);
   max-height: 100%;
   background: var(--panel);
   border: 1px solid var(--border);
