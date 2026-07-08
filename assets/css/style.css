@@ -495,6 +495,12 @@ kbd {
   color: var(--error);
 }
 
+/* rows waiting on the typewriter reveal (main.js); opacity so layout
+   and screen readers still see the full content immediately */
+.pre-reveal {
+  opacity: 0;
+}
+
 /* ------------------------- prompt (input) ------------------------ */
 
 .promptbar {

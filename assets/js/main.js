@@ -40,10 +40,80 @@
 
   const PS1 = '<span class="prompt"><span class="p-host">jackie@google</span>:<span class="p-path">~</span>$</span>';
 
-  function echoLine(cmdText) {
+  /* ---------------- typewriter reveal ----------------
+     Output streams in line by line like a real terminal; a command run
+     by clicking (not typing) is first "typed" into its echoed prompt.
+     Any key or click skips to the end of the current reveal. */
+
+  const REVEAL_MS = 70; // per output line
+  const TYPE_MS = 30; // per character of a clicked command's echo
+
+  let activeReveal = null;
+  let echoTyping = false; // true while running a command from a click
+
+  function finishReveal() {
+    if (activeReveal) {
+      const r = activeReveal;
+      activeReveal = null;
+      r.finish();
+    }
+  }
+
+  /* ticks: [{ delay, fn }] — delay is the pause BEFORE that tick */
+  function playTicks(ticks) {
+    finishReveal();
+    if (!ticks.length) return;
+    if (reducedMotion) {
+      ticks.forEach((t) => t.fn());
+      return;
+    }
+    let i = 0;
+    let timer = 0;
+    function step() {
+      ticks[i++].fn();
+      if (i < ticks.length) timer = setTimeout(step, ticks[i].delay);
+      else activeReveal = null;
+    }
+    activeReveal = {
+      finish() {
+        clearTimeout(timer);
+        while (i < ticks.length) ticks[i++].fn();
+      },
+    };
+    step();
+  }
+
+  document.addEventListener("keydown", finishReveal, true);
+  document.addEventListener("pointerdown", finishReveal, true);
+
+  /* what counts as one printed "line": block rows, minus nested matches
+     (a .card reveals as one unit, not its inner paragraphs) */
+  const ROW_SELECTOR = "p, li, h1, h2, dt, dd, figure, .card";
+
+  function rowsOf(container) {
+    const all = Array.from(container.querySelectorAll(ROW_SELECTOR));
+    const rows = all.filter((el) => !all.some((other) => other !== el && other.contains(el)));
+    return rows.length ? rows : [container];
+  }
+
+  /* hide rows now (opacity only, so layout and the a11y tree keep the
+     full content) and return the ticks that show them one by one */
+  function revealTicks(container) {
+    const rows = rowsOf(container);
+    rows.forEach((r) => r.classList.add("pre-reveal"));
+    return rows.map((r) => ({ delay: REVEAL_MS, fn: () => r.classList.remove("pre-reveal") }));
+  }
+
+  function echoLine(cmdText, ticks) {
     const p = document.createElement("p");
     p.className = "cmd";
-    p.innerHTML = PS1 + " " + escapeHtml(cmdText);
+    if (ticks && echoTyping && !reducedMotion) {
+      p.innerHTML = PS1 + " <span></span>";
+      const span = p.lastElementChild;
+      for (const ch of cmdText) ticks.push({ delay: TYPE_MS, fn: () => (span.textContent += ch) });
+    } else {
+      p.innerHTML = PS1 + " " + escapeHtml(cmdText);
+    }
     applog.appendChild(p);
     return p;
   }
@@ -56,15 +126,18 @@
 
   /* content: an HTML string (rendered) or a Node (appended) */
   function echo(cmdText, content, opts) {
-    const p = echoLine(cmdText);
+    const ticks = [];
+    const p = echoLine(cmdText, ticks);
     if (content != null) {
       const div = document.createElement("div");
       div.className = "output" + (opts && opts.error ? " text error" : typeof content === "string" && opts && opts.text ? " text" : "");
       if (typeof content === "string") div.innerHTML = content;
       else div.appendChild(content);
       applog.appendChild(div);
+      ticks.push(...revealTicks(div));
     }
     scrollToLine(p);
+    playTicks(ticks);
   }
 
   function sectionContent(name) {
@@ -92,9 +165,13 @@
     switch (name) {
       case "help":
       case "?": {
-        const p = echoLine(line);
-        applog.appendChild(helpOutput.cloneNode(true));
+        const ticks = [];
+        const p = echoLine(line, ticks);
+        const out = helpOutput.cloneNode(true);
+        applog.appendChild(out);
+        ticks.push(...revealTicks(out));
         scrollToLine(p);
+        playTicks(ticks);
         break;
       }
 
@@ -141,10 +218,15 @@
     }
   }
 
-  /* clicking a command name runs it (works inside intro, help output, etc.) */
+  /* clicking a command name runs it (works inside intro, help output, etc.);
+     the visitor didn't type it, so the echo types itself */
   screen.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-cmd]");
-    if (btn) run(btn.dataset.cmd);
+    if (btn) {
+      echoTyping = true;
+      run(btn.dataset.cmd);
+      echoTyping = false;
+    }
   });
 
   /* ---------------- input handling ---------------- */
@@ -194,4 +276,7 @@
     });
     input.focus();
   }
+
+  /* the intro prints itself on load, same as any command output */
+  playTicks(revealTicks(intro));
 })();
