@@ -24,13 +24,13 @@
 }
 
 [data-theme="light"] {
-  /* retro pixel font to match the walk-by sprites; VT323's glyphs fill
-     more of the em-box than system monos, so the root font-size below is
-     calibrated so rendered glyph heights match the dark theme (22px VT323
-     ≈ 18px system mono, measured), and the line-height keeps row spacing
-     equal in absolute pixels (1.31 × 22px ≈ 1.6 × 18px). */
+  /* retro pixel font to match the walk-by sprites; VT323 renders small,
+     so the root font-size is bumped below. 24px was tuned by eye against
+     the dark theme's 18px (22px reads too small, 25px too tall), and the
+     line-height keeps row spacing identical in absolute pixels
+     (1.2 × 24px = 1.6 × 18px = 28.8px). */
   --font: "VT323", ui-monospace, Menlo, Consolas, monospace;
-  --lh: 1.31;
+  --lh: 1.2;
   --bg: #eee8d5;
   --panel: #fdf6e3;
   --panel-2: #f3edd9;
@@ -52,8 +52,8 @@ html {
 }
 
 html[data-theme="light"] {
-  /* dark clamp × 1.222: the size at which VT323 matches its glyph height */
-  font-size: clamp(17px, 1.22vw + 0.67rem, 22px);
+  /* dark clamp × 1.333, so the two themes scale in lockstep */
+  font-size: clamp(19px, 1.33vw + 0.73rem, 24px);
 }
 
 body {
