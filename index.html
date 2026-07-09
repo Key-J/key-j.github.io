@@ -28,7 +28,7 @@
     </button>
     <div class="terminal">
       <div class="titlebar">
-        <span class="dot dot-red" aria-hidden="true"></span>
+        <button class="dot dot-red" type="button" aria-label="Close terminal"></button>
         <span class="dot dot-yellow" aria-hidden="true"></span>
         <span class="dot dot-green" aria-hidden="true"></span>
         <span class="title" aria-hidden="true">jackie@google: ~ — zsh</span>
@@ -96,8 +96,7 @@
         <button type="button" data-cmd="projects">projects</button>
         <button type="button" data-cmd="publications">publications</button>
         <button type="button" data-cmd="contact">contact</button>
-        <button type="button" data-cmd="theme">theme</button>
-        <button type="button" data-cmd="clear">clear</button>
+        <button type="button" data-cmd="misc">misc</button>
         <button type="button" data-cmd="help">help</button>
       </nav>
     </div>
@@ -111,6 +110,7 @@
         <li><button class="cmdlink" type="button" data-cmd="projects">projects</button><span class="desc">what I'm building</span></li>
         <li><button class="cmdlink" type="button" data-cmd="publications">publications</button><span class="desc">papers</span></li>
         <li><button class="cmdlink" type="button" data-cmd="contact">contact</button><span class="desc">how to reach me</span></li>
+        <li><button class="cmdlink" type="button" data-cmd="misc">misc</button><span class="desc">everything else</span></li>
         <li><button class="cmdlink" type="button" data-cmd="theme">theme</button><span class="desc">switch dark / light colors</span></li>
         <li><button class="cmdlink" type="button" data-cmd="clear">clear</button><span class="desc">wipe the screen</span></li>
         <li><button class="cmdlink" type="button" data-cmd="help">help</button><span class="desc">show this list again</span></li>
@@ -161,6 +161,21 @@
           <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
         </li>
       </ol>
+    </template>
+
+    <template id="tpl-misc">
+      <dl class="kv">
+        <dt>hobbies</dt>
+        <dd>placeholder — things you do away from a keyboard</dd>
+        <dt>reading</dt>
+        <dd>placeholder — current book or blog worth sharing</dd>
+        <dt>playing</dt>
+        <dd>placeholder — a game, an instrument, a sport</dd>
+        <dt>gear</dt>
+        <dd>placeholder — machine, keyboard, editor of choice</dd>
+        <dt>links</dt>
+        <dd>placeholder — fun corners of the internet</dd>
+      </dl>
     </template>
 
     <template id="tpl-contact">

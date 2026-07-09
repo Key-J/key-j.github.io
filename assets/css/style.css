@@ -24,12 +24,13 @@
 }
 
 [data-theme="light"] {
-  /* retro pixel font to match the walk-by sprites; VT323 renders small,
-     so the root font-size is bumped below to compensate. It's compact,
-     so a tighter line-height keeps row spacing ~equal to the dark theme
-     in absolute pixels (1.2 × 25px ≈ 1.6 × 18px). */
+  /* retro pixel font to match the walk-by sprites; VT323's glyphs fill
+     more of the em-box than system monos, so the root font-size below is
+     calibrated so rendered glyph heights match the dark theme (22px VT323
+     ≈ 18px system mono, measured), and the line-height keeps row spacing
+     equal in absolute pixels (1.31 × 22px ≈ 1.6 × 18px). */
   --font: "VT323", ui-monospace, Menlo, Consolas, monospace;
-  --lh: 1.2;
+  --lh: 1.31;
   --bg: #eee8d5;
   --panel: #fdf6e3;
   --panel-2: #f3edd9;
@@ -51,7 +52,8 @@ html {
 }
 
 html[data-theme="light"] {
-  font-size: clamp(19px, 1.4vw + 0.7rem, 25px);
+  /* dark clamp × 1.222: the size at which VT323 matches its glyph height */
+  font-size: clamp(17px, 1.22vw + 0.67rem, 22px);
 }
 
 body {
@@ -126,6 +128,28 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
+  border: 0; /* the red one is a <button> */
+  padding: 0;
+}
+
+/* the red dot really closes the window (back to the desktop icon);
+   like macOS it shows its glyph only on hover */
+button.dot {
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+button.dot::after {
+  content: "\00d7";
+  font: bold 10px/1 ui-monospace, Menlo, Consolas, monospace;
+  color: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+}
+
+button.dot:hover::after,
+button.dot:focus-visible::after {
+  opacity: 1;
 }
 
 .dot-red { background: #ff5f57; }
@@ -584,6 +608,13 @@ h2 {
 [data-intro="open"] .deskicon {
   opacity: 0;
   pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-intro] .terminal,
+  .deskicon {
+    transition: none;
+  }
 }
 
 /* shell theater: real-date "Last login" line printed above the boot */

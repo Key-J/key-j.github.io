@@ -6,7 +6,7 @@
   const form = document.getElementById("prompt-form");
   const input = document.getElementById("cmd-input");
 
-  const SECTIONS = ["news", "projects", "publications", "contact"];
+  const SECTIONS = ["news", "projects", "publications", "contact", "misc"];
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
 
@@ -323,20 +323,25 @@
   /* boot: the terminal runs `whoami` itself — types it into the prompt,
      "presses Enter", then streams the #boot block (which is static
      HTML, so it's simply hidden and revealed row by row) */
-  const bootTicks = revealTicks(boot);
+  let bootTicks = revealTicks(boot);
 
   /* real-date "Last login" line, inserted AFTER the rows are pre-hidden
-     so it's already printed the moment the window opens */
-  const now = new Date();
-  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const pad = (n) => String(n).padStart(2, "0");
-  const lastLogin = document.createElement("p");
-  lastLogin.className = "lastlogin";
-  lastLogin.textContent =
-    "Last login: " + DAYS[now.getDay()] + " " + MONTHS[now.getMonth()] + " " + now.getDate() +
-    " " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + " on ttys001";
-  boot.insertBefore(lastLogin, boot.firstChild);
+     so it's already printed the moment the window opens; each session
+     (the red dot closes one, the icon starts one) gets a fresh time */
+  let lastLogin;
+  function printLastLogin() {
+    const now = new Date();
+    const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const pad = (n) => String(n).padStart(2, "0");
+    lastLogin = document.createElement("p");
+    lastLogin.className = "lastlogin";
+    lastLogin.textContent =
+      "Last login: " + DAYS[now.getDay()] + " " + MONTHS[now.getMonth()] + " " + now.getDate() +
+      " " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + " on ttys001";
+    boot.insertBefore(lastLogin, boot.firstChild);
+  }
+  printLastLogin();
 
   function bootSequence() {
     if (finePointer) input.focus();
@@ -363,25 +368,56 @@
     playTicks(ticks);
   }
 
-  /* intro: a desktop with one app icon. The window zooms open after a
-     short beat — or on the first click/keypress, which starts it early
-     (never skips it) — then the shell boots. Without [data-intro]
-     (no JS gate ran: reduced motion) the terminal is already open. */
-  if (root.dataset.intro) {
-    let opened = false;
-    const autoOpen = setTimeout(openTerminal, 1500);
-    function openTerminal() {
-      if (opened) return;
-      opened = true;
-      clearTimeout(autoOpen);
-      document.removeEventListener("keydown", openTerminal, true);
-      document.removeEventListener("pointerdown", openTerminal, true);
-      root.dataset.intro = "open";
-      setTimeout(bootSequence, 450); // once the zoom lands
-      setTimeout(() => delete root.dataset.intro, 650); // drop icon + transition styles
-    }
+  /* intro / window lifecycle: a desktop with one app icon. The window
+     zooms open after a short beat — or on the first click/keypress,
+     which starts it early (never skips it) — then the shell boots.
+     Without [data-intro] (no JS gate ran: reduced motion) the terminal
+     is already open. The red dot reverses the whole thing. */
+  let opened = false;
+  let autoOpen = 0;
+
+  function openTerminal() {
+    if (opened) return;
+    opened = true;
+    clearTimeout(autoOpen);
+    document.removeEventListener("keydown", openTerminal, true);
+    document.removeEventListener("pointerdown", openTerminal, true);
+    root.dataset.intro = "open";
+    setTimeout(bootSequence, reducedMotion ? 0 : 450); // once the zoom lands
+    setTimeout(() => delete root.dataset.intro, reducedMotion ? 0 : 650); // drop icon + transition styles
+  }
+
+  function armDesktop(autoDelay) {
+    opened = false;
     document.addEventListener("keydown", openTerminal, true);
     document.addEventListener("pointerdown", openTerminal, true);
+    if (autoDelay) autoOpen = setTimeout(openTerminal, autoDelay);
+  }
+
+  /* red dot: close the session — the window zooms back down to the
+     desktop icon, and the next open is a fresh boot with a new
+     Last login time. Deliberate close, so no auto-reopen timer. */
+  document.querySelector(".dot-red").addEventListener("click", () => {
+    finishReveal();
+    introPlaying = true; // boot re-enables skipping when it replays
+    root.dataset.intro = "wait";
+    setTimeout(() => {
+      /* reset the session behind the closed window */
+      applog.innerHTML = "";
+      boot.hidden = false;
+      input.value = "";
+      syncCursor();
+      lastLogin.remove();
+      bootTicks = revealTicks(boot);
+      printLastLogin();
+      setActive("whoami");
+      screen.scrollTo({ top: 0 });
+      armDesktop(0);
+    }, reducedMotion ? 0 : 450);
+  });
+
+  if (root.dataset.intro) {
+    armDesktop(1500);
   } else {
     bootSequence();
   }
