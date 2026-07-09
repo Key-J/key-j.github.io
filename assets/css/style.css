@@ -522,19 +522,30 @@ h2 {
 
 /* --------------------- status line (tmux-style) ------------------
    Window chrome like the titlebar: fixed px sizing, identical in
-   both themes. Lists every command; * marks the current page. */
+   both themes. Lists every command; * marks the current page.
+   Always a single line: when it doesn't fit (phones) it pans
+   sideways, with the right edge fading out to hint at more. The
+   extra right padding keeps the last button clear of the fade. */
 
 .statusbar {
   flex: none;
   display: flex;
-  flex-wrap: wrap;
-  gap: 2px 14px;
-  padding: 6px 14px;
+  gap: 14px;
+  padding: 6px 32px 6px 14px;
   background: var(--panel-2);
   border-top: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+
+.statusbar::-webkit-scrollbar {
+  display: none;
 }
 
 .statusbar button {
+  flex: none;
   border: 0;
   padding: 0;
   background: none;
