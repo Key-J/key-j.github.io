@@ -11,9 +11,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" />
     <link rel="stylesheet" href="assets/css/style.css" />
+    <script>
+      /* intro gate: set only when JS runs and motion is allowed, so no-JS
+         visitors, crawlers, and reduced-motion users get the open terminal */
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.dataset.intro = "wait";
+    </script>
   </head>
   <body>
     <canvas id="bg" aria-hidden="true"></canvas>
+
+    <!-- the "desktop": one app icon; main.js zooms the terminal open from
+         here after a beat (or on the first click/keypress) -->
+    <button class="deskicon" type="button" aria-label="Open terminal">
+      <span class="glyph" aria-hidden="true">&gt;<span class="caret">_</span></span>
+      <span class="label" aria-hidden="true">terminal</span>
+    </button>
     <div class="terminal">
       <div class="titlebar">
         <span class="dot dot-red" aria-hidden="true"></span>

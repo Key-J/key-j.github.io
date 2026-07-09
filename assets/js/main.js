@@ -86,8 +86,15 @@
     step();
   }
 
-  document.addEventListener("keydown", finishReveal, true);
-  document.addEventListener("pointerdown", finishReveal, true);
+  /* the intro (icon → window zoom → boot) always plays in full: clicks
+     and keys only fast-forward a reveal once it has finished. (Running
+     a command mid-intro still works — playTicks itself fast-forwards.) */
+  let introPlaying = true;
+  function skipReveal() {
+    if (!introPlaying) finishReveal();
+  }
+  document.addEventListener("keydown", skipReveal, true);
+  document.addEventListener("pointerdown", skipReveal, true);
 
   /* what counts as one printed "line": block rows, minus nested matches
      (a .card reveals as one unit, not its inner paragraphs) */
@@ -308,31 +315,71 @@
       if (e.target === input || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key.length === 1) input.focus();
     });
-    input.focus();
   }
 
   /* boot: the terminal runs `whoami` itself — types it into the prompt,
      "presses Enter", then streams the #boot block (which is static
      HTML, so it's simply hidden and revealed row by row) */
   const bootTicks = revealTicks(boot);
-  const ticks = [{ delay: 0, fn: () => {} }]; // beat before typing starts
-  for (const ch of "whoami") {
+
+  /* real-date "Last login" line, inserted AFTER the rows are pre-hidden
+     so it's already printed the moment the window opens */
+  const now = new Date();
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const pad = (n) => String(n).padStart(2, "0");
+  const lastLogin = document.createElement("p");
+  lastLogin.className = "lastlogin";
+  lastLogin.textContent =
+    "Last login: " + DAYS[now.getDay()] + " " + MONTHS[now.getMonth()] + " " + now.getDate() +
+    " " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + " on ttys001";
+  boot.insertBefore(lastLogin, boot.firstChild);
+
+  function bootSequence() {
+    if (finePointer) input.focus();
+    const ticks = [{ delay: 0, fn: () => { input.value = ""; syncCursor(); } }]; // beat (and drop stray keys)
+    for (const ch of "whoami") {
+      ticks.push({
+        delay: TYPE_MS,
+        fn: () => {
+          input.value += ch;
+          syncCursor();
+        },
+      });
+    }
+    ticks[1].delay = 400;
     ticks.push({
-      delay: TYPE_MS,
+      delay: ENTER_MS,
       fn: () => {
-        input.value += ch;
+        input.value = "";
         syncCursor();
       },
     });
+    ticks.push(...bootTicks);
+    ticks.push({ delay: 0, fn: () => { introPlaying = false; } }); // skipping re-enabled
+    playTicks(ticks);
   }
-  ticks[1].delay = 400;
-  ticks.push({
-    delay: ENTER_MS,
-    fn: () => {
-      input.value = "";
-      syncCursor();
-    },
-  });
-  ticks.push(...bootTicks);
-  playTicks(ticks);
+
+  /* intro: a desktop with one app icon. The window zooms open after a
+     short beat — or on the first click/keypress, which starts it early
+     (never skips it) — then the shell boots. Without [data-intro]
+     (no JS gate ran: reduced motion) the terminal is already open. */
+  if (root.dataset.intro) {
+    let opened = false;
+    const autoOpen = setTimeout(openTerminal, 1500);
+    function openTerminal() {
+      if (opened) return;
+      opened = true;
+      clearTimeout(autoOpen);
+      document.removeEventListener("keydown", openTerminal, true);
+      document.removeEventListener("pointerdown", openTerminal, true);
+      root.dataset.intro = "open";
+      setTimeout(bootSequence, 450); // once the zoom lands
+      setTimeout(() => delete root.dataset.intro, 650); // drop icon + transition styles
+    }
+    document.addEventListener("keydown", openTerminal, true);
+    document.addEventListener("pointerdown", openTerminal, true);
+  } else {
+    bootSequence();
+  }
 })();
