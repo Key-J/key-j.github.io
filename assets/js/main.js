@@ -8,6 +8,7 @@
 
   const SECTIONS = ["news", "projects", "publications", "contact"];
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer = window.matchMedia("(pointer: fine)").matches;
 
   /* ---------------- theme ---------------- */
 
@@ -238,7 +239,8 @@
   /* clicking a command name types it into the real prompt and submits,
      so it enters the terminal the same way a typed command does */
   function typeAndRun(cmdText) {
-    input.focus();
+    /* focusing on touch would pop up the on-screen keyboard */
+    if (finePointer) input.focus();
     input.value = "";
     syncCursor();
     const ticks = [];
@@ -301,7 +303,7 @@
 
   /* keyboard users can start typing from anywhere; skip when a fine
      pointer isn't guaranteed (touch) so the keyboard doesn't pop up */
-  if (window.matchMedia("(pointer: fine)").matches) {
+  if (finePointer) {
     document.addEventListener("keydown", (e) => {
       if (e.target === input || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key.length === 1) input.focus();
