@@ -132,6 +132,7 @@
      One page at a time: each command replaces whatever is on screen,
      including the whoami block. */
   function echo(cmdText, content, opts) {
+    lastLogin.remove(); // the boot-session line never reprints
     boot.hidden = true;
     applog.innerHTML = "";
     const ticks = [];
@@ -161,6 +162,7 @@
   /* whoami is the static #boot block, not a template — re-running it
      re-shows that block with the same echo + streamed reveal */
   function showWhoami() {
+    lastLogin.remove(); // the boot-session line never reprints
     applog.innerHTML = "";
     boot.hidden = false;
     screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
@@ -215,6 +217,7 @@
       case "clear":
         /* a real clear: blank screen, and no page marked in the status
            line because none is showing */
+        lastLogin.remove();
         boot.hidden = true;
         applog.innerHTML = "";
         screen.scrollTo({ top: 0 });
