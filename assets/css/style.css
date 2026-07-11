@@ -25,10 +25,10 @@
 
 [data-theme="light"] {
   /* retro pixel font to match the walk-by sprites; VT323 renders small,
-     so the root font-size is bumped below. 24px was tuned by eye against
-     the dark theme's 18px (22px reads too small, 25px too tall), and the
+     so the root font-size is bumped below. The ×1.333 ratio was tuned by
+     eye (22px read too small against dark's 18px, 25px too tall), and the
      line-height keeps row spacing identical in absolute pixels
-     (1.2 × 24px = 1.6 × 18px = 28.8px). */
+     (1.2 × 22.7px = 1.6 × 17px = 27.2px). */
   --font: "VT323", ui-monospace, Menlo, Consolas, monospace;
   --lh: 1.2;
   --bg: #eee8d5;
@@ -47,13 +47,14 @@
 }
 
 html {
-  /* fluid type: ~14px on phones → ~18px on large screens */
-  font-size: clamp(14px, 1vw + 0.55rem, 18px);
+  /* fluid type: ~14px on phones → ~17px on large screens
+     (17px keeps the whoami page inside the box without a scrollbar) */
+  font-size: clamp(14px, 1vw + 0.55rem, 17px);
 }
 
 html[data-theme="light"] {
   /* dark clamp × 1.333, so the two themes scale in lockstep */
-  font-size: clamp(19px, 1.33vw + 0.73rem, 24px);
+  font-size: clamp(19px, 1.33vw + 0.73rem, 22.7px);
 }
 
 body {
@@ -340,6 +341,12 @@ h2 {
 
 .tagline {
   color: var(--dim);
+  margin: 0 0 0.75rem;
+}
+
+.facts p {
+  /* UA default is 1em top+bottom; the tighter rhythm keeps the whole
+     whoami page inside the box (no scrollbar) at common window heights */
   margin: 0 0 0.75rem;
 }
 
