@@ -302,7 +302,9 @@ h2 {
   background: none;
   font: inherit;
   color: var(--accent);
-  text-decoration: underline dotted;
+  /* no resting underline — nine dotted rows read as clutter; the accent
+     color, "> " prefix, and cursor carry the clickable hint instead */
+  text-decoration: none;
   text-underline-offset: 0.2em;
   cursor: pointer;
 }
@@ -315,6 +317,7 @@ h2 {
 .cmdlink:hover,
 .cmdlink:focus-visible {
   color: var(--fg);
+  text-decoration: underline dotted;
 }
 
 /* about: image + facts, side by side → stacked on narrow screens */
