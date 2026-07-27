@@ -243,12 +243,29 @@
 
   /* ---------------- loop + wiring ---------------- */
 
-  let last = performance.now();
+  /* The loop only runs while the light theme is showing — the dark theme
+     draws nothing, so leaving it armed would burn a callback every frame
+     on the default theme. rAF ids are always non-zero, so 0 means parked. */
+
+  let last = 0;
+  let rafId = 0;
+
   function loop(ts) {
     const dt = Math.min((ts - last) / 1000, 0.05);
     last = ts;
-    if (mode === "light") drawWalkers(dt); /* dark theme draws nothing */
-    requestAnimationFrame(loop);
+    drawWalkers(dt);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function start() {
+    if (rafId) return;
+    last = performance.now(); /* same time origin as the rAF timestamp */
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function stop() {
+    cancelAnimationFrame(rafId);
+    rafId = 0;
   }
 
   document.addEventListener("themechange", (e) => {
@@ -256,9 +273,11 @@
     ctx.clearRect(0, 0, W, H);
     walkers = [];
     emptyT = 1.5; /* a walk-by greets the light theme almost immediately */
+    if (mode === "light") start();
+    else stop();
   });
 
   window.addEventListener("resize", resize);
   resize();
-  requestAnimationFrame(loop);
+  if (mode === "light") start();
 })();

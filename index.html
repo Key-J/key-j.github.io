@@ -6,10 +6,14 @@
     <title>Jackie (Yikun) Wang</title>
     <meta name="description" content="Jackie (Yikun) Wang — software engineer at Google, incoming Stanford MSCS (AI). Projects, publications, and contact." />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>" />
-    <!-- light-theme retro pixel font (dark uses the system mono stack) -->
+    <!-- Light-theme retro pixel font; dark uses the system mono stack, so
+         most visitors never render a VT323 glyph. media="print" → onload
+         keeps it off the critical path for everyone while the preconnects
+         keep the connection warm for light. No <noscript> fallback needed:
+         without JS the theme can never leave dark. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" media="print" onload="this.media='all'" />
     <link rel="stylesheet" href="assets/css/style.css" />
     <script>
       /* intro gate: set only when JS runs and motion is allowed, so no-JS
@@ -147,7 +151,7 @@
     </template>
 
     <template id="tpl-publications">
-      <ol class="publist" reversed>
+      <ol class="publist">
         <li>
           <span class="pub-title">Title of a Paper Goes Here.</span>
           <span class="pub-authors"><strong>J. Wang</strong>, A. Coauthor, B. Coauthor.</span>

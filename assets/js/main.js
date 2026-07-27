@@ -139,7 +139,7 @@
     const p = echoLine(cmdText);
     if (content != null) {
       const div = document.createElement("div");
-      div.className = "output" + (opts && opts.error ? " text error" : typeof content === "string" && opts && opts.text ? " text" : "");
+      div.className = "output" + (opts && opts.error ? " text error" : "");
       if (typeof content === "string") div.innerHTML = content;
       else div.appendChild(content);
       applog.appendChild(div);

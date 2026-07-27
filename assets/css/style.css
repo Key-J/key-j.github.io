@@ -71,8 +71,8 @@ body {
 }
 
 /* ---------------------- background scenery ----------------------
-   Full-screen canvas behind the terminal (digit rain / pixel
-   critters, see bg.js). Decorative only: no pointer events. */
+   Full-screen canvas behind the terminal (light-theme pixel
+   walk-bys, see bg.js). Decorative only: no pointer events. */
 
 #bg {
   position: fixed;
@@ -476,7 +476,9 @@ h2 {
 }
 
 #applog .output.text {
-  white-space: pre-wrap; /* plain-text outputs only; HTML outputs keep normal flow */
+  /* plain-string output (today: error messages, which echo() tags
+     "text error"); HTML outputs keep normal flow */
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
