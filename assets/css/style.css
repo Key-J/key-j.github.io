@@ -562,21 +562,6 @@ h2 {
   font-size: 0.9rem;
 }
 
-/* history */
-
-.histlist {
-  margin: 0.25rem 0;
-  padding-left: 5ch;
-}
-
-.histlist li {
-  margin-block: 0.1rem;
-}
-
-.histlist li::marker {
-  color: var(--dim);
-}
-
 /* --------------------- command output in the log ----------------- */
 
 #applog .cmd {

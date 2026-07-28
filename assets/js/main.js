@@ -28,7 +28,6 @@
      absent from the status line (there is no page for them to mark) */
   const ACTIONS = [
     { cmd: "theme", desc: "switch dark / light colors" },
-    { cmd: "history", desc: "commands you've run" },
     { cmd: "clear", desc: "wipe the screen" },
   ];
 
@@ -353,24 +352,6 @@
         setActive("");
         break;
 
-      case "history": {
-        /* the submit handler records the line before run() sees it, so
-           `history` lists itself last — same as a real shell */
-        if (!cmdHistory.length) {
-          echo(line, "no commands yet");
-          break;
-        }
-        const ol = document.createElement("ol");
-        ol.className = "histlist";
-        for (const h of cmdHistory) {
-          const li = document.createElement("li");
-          li.textContent = h;
-          ol.appendChild(li);
-        }
-        echo(line, ol);
-        setActive("");
-        break;
-      }
 
       case "top":
       case "home":
