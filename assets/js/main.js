@@ -230,6 +230,12 @@
 
   function setActive(name) {
     statusbar.querySelectorAll("[data-cmd]").forEach((b) => b.classList.toggle("active", b.dataset.cmd === name));
+    /* when the line is panned (narrow screens), keep the marked page on
+       screen — otherwise the * marker is off past the right edge */
+    const marked = statusbar.querySelector(".active");
+    if (marked && statusbar.scrollWidth > statusbar.clientWidth) {
+      marked.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
   }
 
   /* the shell boots into whoami, so it starts marked — this replaces the
@@ -540,6 +546,15 @@
       e.preventDefault();
     }
   });
+
+  /* On a phone the full placeholder is clipped — and the clipped half is
+     the part naming the command to try. Shorten it rather than lose it. */
+  const narrowScreen = window.matchMedia("(max-width: 560px)");
+  function syncPlaceholder() {
+    input.placeholder = narrowScreen.matches ? "try 'help'" : "type a command — try 'help'";
+  }
+  narrowScreen.addEventListener("change", syncPlaceholder);
+  syncPlaceholder();
 
   /* the blinking block cursor tracks the real caret (ch works: mono font) */
   const cursor = document.getElementById("cmd-cursor");

@@ -776,6 +776,22 @@ h2 {
   content: "*";
 }
 
+/* Phones: wrap instead of panning sideways. The single pannable line was
+   the earlier choice here, but the items that fell off the right edge were
+   misc and help — and a `help` you have to discover a horizontal swipe to
+   reach may as well not exist for a first-time visitor. Wider screens keep
+   the single line, which is where it always fitted anyway. */
+@media (max-width: 560px) {
+  .statusbar {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    overflow-x: visible;
+    padding-right: 14px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .screen {
     scroll-behavior: auto;
