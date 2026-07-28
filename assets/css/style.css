@@ -70,6 +70,44 @@ body {
   overflow: hidden; /* the page never scrolls; the .screen does */
 }
 
+/* --------------------- section sources / no-JS -------------------
+   #pagesrc holds the real markup for every non-whoami section. With JS
+   running it is cloned into the screen on demand and never shown here,
+   so it is hidden from the first paint via the [data-js] flag the inline
+   <head> script sets. With JS off the terminal can't run commands, so the
+   same markup is left visible and the page degrades to a plain document —
+   which also means the body has to be allowed to scroll. */
+
+html[data-js] #pagesrc {
+  display: none;
+}
+
+html:not([data-js]) body {
+  height: auto;
+  overflow: auto;
+}
+
+html:not([data-js]) #pagesrc {
+  width: min(950px, 100%);
+  margin: 1.5rem auto 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* Section headings, seen only in that no-JS document view and by crawlers
+   — inside the terminal the echoed command line is the heading, so
+   sectionContent() drops these when cloning. */
+.page-title {
+  margin: 0 0 0.5rem;
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.page-title::before {
+  content: "$ ";
+  color: var(--dim);
+}
+
 /* ---------------------- background scenery ----------------------
    Full-screen canvas behind the terminal (light-theme pixel
    walk-bys, see bg.js). Decorative only: no pointer events. */

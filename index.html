@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Jackie (Yikun) Wang</title>
     <meta name="description" content="Jackie (Yikun) Wang — software engineer at Google, incoming Stanford MSCS (AI). Projects, publications, and contact." />
+    <link rel="canonical" href="https://key-j.github.io/" />
+
+    <!-- Sharing preview. The portrait is taller than it is wide, so this
+         uses the square-ish "summary" card rather than the wide one. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://key-j.github.io/" />
+    <meta property="og:title" content="Jackie (Yikun) Wang" />
+    <meta property="og:description" content="Software engineer at Google, incoming Stanford MSCS (AI). A personal site that runs like a terminal." />
+    <meta property="og:image" content="https://key-j.github.io/assets/img/portrait.jpg" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Jackie (Yikun) Wang" />
+    <meta name="twitter:description" content="Software engineer at Google, incoming Stanford MSCS (AI). A personal site that runs like a terminal." />
+    <meta name="twitter:image" content="https://key-j.github.io/assets/img/portrait.jpg" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>" />
     <!-- Light-theme retro pixel font; dark uses the system mono stack, so
          most visitors never render a VT323 glyph. media="print" → onload
@@ -16,6 +29,10 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" media="print" onload="this.media='all'" />
     <link rel="stylesheet" href="assets/css/style.css" />
     <script>
+      /* data-js: set before first paint so the section sources at the end
+         of the body can be hidden without a flash. Without it (JS off) they
+         stay visible and the page reads as a plain document. */
+      document.documentElement.dataset.js = "1";
       /* intro gate: set only when JS runs and motion is allowed, so no-JS
          visitors, crawlers, and reduced-motion users get the open terminal */
       if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.dataset.intro = "wait";
@@ -98,79 +115,91 @@
       <nav class="statusbar" id="statusbar" aria-label="Commands"></nav>
     </div>
 
-    <!-- ================= section content (printed on demand) ================= -->
+    <!-- ================= section content =================
+         Real elements rather than <template>: template content is inert and
+         invisible to crawlers, so every section but whoami was unindexable.
+         main.js clones these into the screen on demand; CSS hides the block
+         whenever JS is running, and without JS it reads as a plain document. -->
 
-    <template id="tpl-news">
-      <ul class="newslog">
-        <li><time datetime="2026-09">2026-09</time> Starting Stanford's MSCS (AI concentration) part-time through the Honors Cooperative Program.</li>
-        <li><time datetime="2026-07">2026-07</time> Launched this website.</li>
-        <li><time datetime="2026-03">2026-03</time> Joined Google as a software engineer.</li>
-        <li><time datetime="2025-12">2025-12</time> Graduated from Carnegie Mellon University.</li>
-      </ul>
-    </template>
-
-    <template id="tpl-projects">
-      <div class="projects-grid">
-        <article class="card">
-          <h2><a href="#">project-one/</a></h2>
-          <p>One-line description of the project, what it does and why it matters.</p>
-          <p class="tags"><span>python</span><span>ml</span></p>
-        </article>
-        <article class="card">
-          <h2><a href="#">project-two/</a></h2>
-          <p>One-line description of the project, what it does and why it matters.</p>
-          <p class="tags"><span>c++</span></p>
-        </article>
-        <article class="card">
-          <h2><a href="#">project-three/</a></h2>
-          <p>One-line description of the project, what it does and why it matters.</p>
-          <p class="tags"><span>web</span></p>
-        </article>
+    <div id="pagesrc">
+      <div class="page" id="page-news">
+        <h2 class="page-title">news</h2>
+        <ul class="newslog">
+          <li><time datetime="2026-09">2026-09</time> Starting Stanford's MSCS (AI concentration) part-time through the Honors Cooperative Program.</li>
+          <li><time datetime="2026-07">2026-07</time> Launched this website.</li>
+          <li><time datetime="2026-03">2026-03</time> Joined Google as a software engineer.</li>
+          <li><time datetime="2025-12">2025-12</time> Graduated from Carnegie Mellon University.</li>
+        </ul>
       </div>
-    </template>
 
-    <template id="tpl-publications">
-      <ol class="publist">
-        <li>
-          <span class="pub-title">Title of a Paper Goes Here.</span>
-          <span class="pub-authors"><strong>J. Wang</strong>, A. Coauthor, B. Coauthor.</span>
-          <span class="pub-venue">Venue, 2026.</span>
-          <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
-        </li>
-        <li>
-          <span class="pub-title">Title of Another Paper Goes Here.</span>
-          <span class="pub-authors">A. Coauthor, <strong>J. Wang</strong>.</span>
-          <span class="pub-venue">Venue, 2026.</span>
-          <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
-        </li>
-      </ol>
-    </template>
+      <div class="page" id="page-projects">
+        <h2 class="page-title">projects</h2>
+        <div class="projects-grid">
+          <article class="card">
+            <h2><a href="#">project-one/</a></h2>
+            <p>One-line description of the project, what it does and why it matters.</p>
+            <p class="tags"><span>python</span><span>ml</span></p>
+          </article>
+          <article class="card">
+            <h2><a href="#">project-two/</a></h2>
+            <p>One-line description of the project, what it does and why it matters.</p>
+            <p class="tags"><span>c++</span></p>
+          </article>
+          <article class="card">
+            <h2><a href="#">project-three/</a></h2>
+            <p>One-line description of the project, what it does and why it matters.</p>
+            <p class="tags"><span>web</span></p>
+          </article>
+        </div>
+      </div>
 
-    <template id="tpl-misc">
-      <dl class="kv">
-        <dt>hobbies</dt>
-        <dd>placeholder — things you do away from a keyboard</dd>
-        <dt>reading</dt>
-        <dd>placeholder — current book or blog worth sharing</dd>
-        <dt>playing</dt>
-        <dd>placeholder — a game, an instrument, a sport</dd>
-        <dt>gear</dt>
-        <dd>placeholder — machine, keyboard, editor of choice</dd>
-        <dt>links</dt>
-        <dd>placeholder — fun corners of the internet</dd>
-      </dl>
-    </template>
+      <div class="page" id="page-publications">
+        <h2 class="page-title">publications</h2>
+        <ol class="publist">
+          <li>
+            <span class="pub-title">Title of a Paper Goes Here.</span>
+            <span class="pub-authors"><strong>J. Wang</strong>, A. Coauthor, B. Coauthor.</span>
+            <span class="pub-venue">Venue, 2026.</span>
+            <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
+          </li>
+          <li>
+            <span class="pub-title">Title of Another Paper Goes Here.</span>
+            <span class="pub-authors">A. Coauthor, <strong>J. Wang</strong>.</span>
+            <span class="pub-venue">Venue, 2026.</span>
+            <span class="pub-links"><a href="#">[pdf]</a> <a href="#">[bib]</a></span>
+          </li>
+        </ol>
+      </div>
 
-    <template id="tpl-contact">
-      <dl class="kv">
-        <dt>email</dt>
-        <dd><a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a></dd>
-        <dt>github</dt>
-        <dd><a href="https://github.com/Key-J">github.com/Key-J</a></dd>
-        <dt>scholar</dt>
-        <dd><a href="#">add your Google Scholar link</a></dd>
-      </dl>
-    </template>
+      <div class="page" id="page-misc">
+        <h2 class="page-title">misc</h2>
+        <dl class="kv">
+          <dt>hobbies</dt>
+          <dd>placeholder — things you do away from a keyboard</dd>
+          <dt>reading</dt>
+          <dd>placeholder — current book or blog worth sharing</dd>
+          <dt>playing</dt>
+          <dd>placeholder — a game, an instrument, a sport</dd>
+          <dt>gear</dt>
+          <dd>placeholder — machine, keyboard, editor of choice</dd>
+          <dt>links</dt>
+          <dd>placeholder — fun corners of the internet</dd>
+        </dl>
+      </div>
+
+      <div class="page" id="page-contact">
+        <h2 class="page-title">contact</h2>
+        <dl class="kv">
+          <dt>email</dt>
+          <dd><a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a></dd>
+          <dt>github</dt>
+          <dd><a href="https://github.com/Key-J">github.com/Key-J</a></dd>
+          <dt>scholar</dt>
+          <dd><a href="#">add your Google Scholar link</a></dd>
+        </dl>
+      </div>
+
+      </div>
 
     <script src="assets/js/main.js"></script>
     <script src="assets/js/bg.js"></script>

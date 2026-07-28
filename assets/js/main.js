@@ -178,8 +178,19 @@
     playTicks(ticks);
   }
 
+  /* sections live as real (hidden) elements in #pagesrc rather than in a
+     <template>, so they're in the document for crawlers and no-JS readers.
+     Clone the children, not the wrapper, to match what a template gave us. */
   function sectionContent(name) {
-    return document.getElementById("tpl-" + name).content.cloneNode(true);
+    const src = document.getElementById("page-" + name);
+    const frag = document.createDocumentFragment();
+    for (const child of src.children) {
+      /* .page-title labels the section for crawlers and the no-JS view,
+         where everything stacks into one document. In the terminal the
+         echoed command line already is the heading, so drop it. */
+      if (!child.classList.contains("page-title")) frag.appendChild(child.cloneNode(true));
+    }
+    return frag;
   }
 
   /* the help list, built from the same definitions as everything else.
@@ -228,11 +239,58 @@
   function showPage(page, line) {
     if (page.kind === "boot") {
       showWhoami();
-      return;
+    } else {
+      echo(line, page.cmd === "help" ? helpContent() : sectionContent(page.cmd));
+      setActive(page.cmd);
     }
-    echo(line, page.cmd === "help" ? helpContent() : sectionContent(page.cmd));
-    setActive(page.cmd);
+    route(page.cmd);
   }
+
+  /* ---------------- routing ----------------
+     Each page gets a URL, so pages can be linked, and Back walks the
+     session instead of leaving the site. whoami is the bare URL.
+
+     pushState fires neither popstate nor hashchange, so navigating never
+     re-enters here; only a real Back/Forward or a hand-edited hash does,
+     and both land in showRoute(). */
+
+  let currentCmd = "whoami";
+
+  function hashCmd() {
+    const h = decodeURIComponent(location.hash.replace(/^#/, "")).toLowerCase();
+    const name = ALIASES[h] || h;
+    return PAGE_BY_CMD.has(name) ? name : h === "" ? "whoami" : null;
+  }
+
+  function route(cmd) {
+    if (cmd === currentCmd) return;
+    currentCmd = cmd;
+    const url = cmd === "whoami" ? location.pathname + location.search : "#" + cmd;
+    history.pushState({ cmd }, "", url);
+  }
+
+  /* render whatever the URL now says, without pushing a new entry */
+  function showRoute() {
+    const cmd = hashCmd();
+    if (!cmd || cmd === currentCmd) return; // unknown hash: leave the screen alone
+    currentCmd = cmd;
+    const page = PAGE_BY_CMD.get(cmd);
+    if (page.kind === "boot") showWhoami();
+    else {
+      echo(cmd, page.cmd === "help" ? helpContent() : sectionContent(cmd));
+      setActive(cmd);
+    }
+  }
+
+  addEventListener("popstate", showRoute);
+  addEventListener("hashchange", showRoute);
+
+  /* dead placeholder links (href="#") must not navigate: an empty hash
+     means whoami, and jumping there on a stub link is worse than a no-op */
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href="#"]');
+    if (a) e.preventDefault();
+  });
 
   /* whoami is the static #boot block, not a template — re-running it
      re-shows that block with the same echo + streamed reveal */
@@ -339,15 +397,17 @@
 
   /* ---------------- input handling ---------------- */
 
-  const history = [];
+  /* not `history` — that would shadow window.history for the whole IIFE,
+     which is where the router's pushState lives */
+  const cmdHistory = [];
   let histIdx = -1;
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const line = input.value;
     if (line.trim()) {
-      history.push(line);
-      histIdx = history.length;
+      cmdHistory.push(line);
+      histIdx = cmdHistory.length;
       run(line);
     }
     input.value = "";
@@ -356,10 +416,10 @@
 
   input.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp") {
-      if (histIdx > 0) input.value = history[--histIdx];
+      if (histIdx > 0) input.value = cmdHistory[--histIdx];
       e.preventDefault();
     } else if (e.key === "ArrowDown") {
-      input.value = histIdx < history.length - 1 ? history[++histIdx] : ((histIdx = history.length), "");
+      input.value = histIdx < cmdHistory.length - 1 ? cmdHistory[++histIdx] : ((histIdx = cmdHistory.length), "");
       e.preventDefault();
     }
   });
@@ -407,10 +467,10 @@
   }
   printLastLogin();
 
-  function bootSequence() {
+  function bootSequence(cmd) {
     if (finePointer) input.focus();
     const ticks = [{ delay: 0, fn: () => { input.value = ""; syncCursor(); } }]; // beat (and drop stray keys)
-    for (const ch of "whoami") {
+    for (const ch of cmd) {
       ticks.push({
         delay: TYPE_MS,
         fn: () => {
@@ -427,7 +487,10 @@
         syncCursor();
       },
     });
-    ticks.push(...bootTicks);
+    /* whoami is already on screen as the static #boot block, so it only
+       needs revealing; any other command is run for real */
+    if (cmd === "whoami") ticks.push(...bootTicks);
+    else ticks.push({ delay: 0, fn: () => run(cmd) });
     ticks.push({ delay: 0, fn: () => { introPlaying = false; } }); // skipping re-enabled
     playTicks(ticks);
   }
@@ -447,7 +510,7 @@
     document.removeEventListener("keydown", openTerminal, true);
     document.removeEventListener("pointerdown", openTerminal, true);
     root.dataset.intro = "open";
-    setTimeout(bootSequence, reducedMotion ? 0 : 450); // once the zoom lands
+    setTimeout(() => bootSequence("whoami"), reducedMotion ? 0 : 450); // once the zoom lands
     setTimeout(() => delete root.dataset.intro, reducedMotion ? 0 : 650); // drop icon + transition styles
   }
 
@@ -475,14 +538,26 @@
       bootTicks = revealTicks(boot);
       printLastLogin();
       setActive("whoami");
+      route("whoami"); // a fresh session is back at the top-level URL
       screen.scrollTo({ top: 0 });
       armDesktop(0);
     }, reducedMotion ? 0 : 450);
   });
 
-  if (root.dataset.intro) {
+  /* A deep link skips the desktop intro: someone following a shared link
+     should land on the content, not on two seconds of theatre. The prompt
+     still types the command out — that beat is the site's handshake, and
+     it costs well under a second. Seed currentCmd from the URL first so
+     the boot doesn't push a duplicate history entry over itself. */
+  const initialCmd = hashCmd() || "whoami";
+  currentCmd = initialCmd;
+
+  if (initialCmd !== "whoami") {
+    delete root.dataset.intro;
+    bootSequence(initialCmd);
+  } else if (root.dataset.intro) {
     armDesktop(1500);
   } else {
-    bootSequence();
+    bootSequence("whoami");
   }
 })();
