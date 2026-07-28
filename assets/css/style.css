@@ -598,12 +598,41 @@ h2 {
    into the screen (which holds one page at a time and would lose it) */
 .completions {
   margin: 0 0 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2ch;
   color: var(--dim);
   font-size: 0.85rem;
-  /* pre-wrap so the gaps between candidates survive HTML whitespace
-     collapsing — otherwise the list reads as a sentence */
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* one candidate; a button because on touch, tapping it is the only way
+   to complete — there is no Tab key on a phone keyboard */
+.comp {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.comp:hover,
+.comp:focus-visible {
+  color: var(--fg);
+  text-decoration: underline dotted;
+}
+
+/* roomier targets where fingers do the tapping */
+@media (pointer: coarse) {
+  .completions {
+    gap: 0 1.5ch;
+    font-size: 0.95rem;
+  }
+
+  .comp {
+    padding: 5px 0;
+  }
 }
 
 #prompt-form {
@@ -788,19 +817,17 @@ h2 {
   content: "*";
 }
 
-/* Phones: wrap instead of panning sideways. The single pannable line was
-   the earlier choice here, but the items that fell off the right edge were
-   misc and help — and a `help` you have to discover a horizontal swipe to
-   reach may as well not exist for a first-time visitor. Wider screens keep
-   the single line, which is where it always fitted anyway. */
+/* Phones: still one line that pans sideways — two rows stop reading as a
+   tmux status line. Tightened a little so less of it is hidden, and
+   setActive() keeps the marked page scrolled into view. */
 @media (max-width: 560px) {
   .statusbar {
-    flex-wrap: wrap;
-    row-gap: 6px;
-    overflow-x: visible;
-    padding-right: 14px;
-    -webkit-mask-image: none;
-    mask-image: none;
+    gap: 11px;
+    padding-right: 26px;
+  }
+
+  .statusbar button {
+    font-size: 11.5px;
   }
 }
 

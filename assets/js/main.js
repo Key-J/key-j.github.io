@@ -420,6 +420,9 @@
     }
     input.value = "";
     syncCursor();
+    /* touch: drop focus so the on-screen keyboard folds away — otherwise
+       the output you just asked for is hidden behind half a screen of keys */
+    if (!finePointer) input.blur();
   });
 
   /* ---------------- tab completion ----------------
@@ -432,10 +435,22 @@
   const COMPLETIONS = [...PAGES.map((p) => p.cmd), ...ACTIONS.map((a) => a.cmd), "cd", "email"].sort();
 
   const completions = document.getElementById("completions");
+  let flashTimer = 0;
 
   function hideCompletions() {
+    clearTimeout(flashTimer);
     completions.hidden = true;
     completions.textContent = "";
+  }
+
+  /* a transient note in the completion strip (^C). Feedback has to go here
+     rather than into the screen, which holds one page at a time and would
+     lose whatever you were reading. */
+  function flashNote(text) {
+    clearTimeout(flashTimer);
+    completions.textContent = text;
+    completions.hidden = false;
+    flashTimer = setTimeout(hideCompletions, 900);
   }
 
   function commonPrefix(list) {
@@ -444,47 +459,76 @@
     return p;
   }
 
-  let lastTab = null; // the input value at the previous Tab, for double-Tab
-
-  function complete() {
+  /* what the line is asking to complete — the command word, or a `cd`
+     argument — plus everything matching it. null if neither applies. */
+  function matches() {
     const val = input.value;
     const parts = val.trim().split(/\s+/).filter(Boolean);
     const trailingSpace = /\s$/.test(val);
-    let pool, word, head;
+    let ctx = null;
 
     if (parts.length <= 1 && !trailingSpace) {
-      pool = COMPLETIONS;
-      word = (parts[0] || "").toLowerCase();
-      head = "";
+      ctx = { pool: COMPLETIONS, word: (parts[0] || "").toLowerCase(), head: "" };
     } else if ((ALIASES[parts[0].toLowerCase()] || parts[0].toLowerCase()) === "cd" && parts.length <= 2) {
-      pool = DIRS;
-      word = (trailingSpace && parts.length === 1 ? "" : parts[1] || "").toLowerCase();
-      head = "cd ";
-    } else {
-      return; // nothing sensible to complete
+      ctx = { pool: DIRS, word: (trailingSpace && parts.length === 1 ? "" : parts[1] || "").toLowerCase(), head: "cd " };
     }
+    if (!ctx) return null;
+    return { ...ctx, hits: ctx.pool.filter((c) => c.startsWith(ctx.word)) };
+  }
 
-    const hits = pool.filter((c) => c.startsWith(word));
-    if (!hits.length) return;
+  /* Candidates are buttons, not text: a touch keyboard has no Tab key, so
+     tapping one is the only way to complete there. */
+  function showCandidates(hits, head) {
+    clearTimeout(flashTimer);
+    completions.textContent = "";
+    for (const hit of hits) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "comp";
+      b.textContent = hit;
+      b.addEventListener("click", () => {
+        input.value = head + hit;
+        hideCompletions();
+        form.requestSubmit();
+      });
+      completions.appendChild(b);
+    }
+    completions.hidden = false;
+  }
 
-    if (hits.length === 1) {
-      input.value = head + hits[0];
+  /* One Tab does the whole job: a single match completes, several complete
+     as far as they agree and list themselves. bash makes you press twice
+     for the list; there's no reason to make you ask for it. */
+  function complete() {
+    const m = matches();
+    if (!m || !m.hits.length) return;
+    if (m.hits.length === 1) {
+      input.value = m.head + m.hits[0];
       hideCompletions();
     } else {
-      const prefix = commonPrefix(hits);
-      if (prefix.length > word.length) {
-        input.value = head + prefix;
-        hideCompletions();
-      } else if (lastTab === val) {
-        completions.textContent = hits.join("   ");
-        completions.hidden = false;
-      }
+      const prefix = commonPrefix(m.hits);
+      if (prefix.length > m.word.length) input.value = m.head + prefix;
+      showCandidates(m.hits, m.head);
     }
-    lastTab = input.value;
     syncCursor();
   }
 
-  input.addEventListener("input", hideCompletions);
+  /* Touch has no Tab, so there the candidates appear as you type and are
+     tapped. Pointer devices keep Tab and an uncluttered prompt. */
+  function liveSuggest() {
+    if (finePointer) {
+      hideCompletions();
+      return;
+    }
+    const m = matches();
+    if (!m || !m.word || !m.hits.length || (m.hits.length === 1 && m.hits[0] === m.word)) {
+      hideCompletions();
+      return;
+    }
+    showCandidates(m.hits, m.head);
+  }
+
+  input.addEventListener("input", liveSuggest);
 
   input.addEventListener("keydown", (e) => {
     if (e.key === "Tab") {
@@ -502,7 +546,7 @@
       e.preventDefault();
       finishReveal();
       input.value = "";
-      hideCompletions();
+      flashNote("^C"); // otherwise abandoning an empty line looks like nothing happened
       histIdx = cmdHistory.length;
       syncCursor();
       return;
