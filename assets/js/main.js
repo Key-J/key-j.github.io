@@ -28,6 +28,7 @@
      absent from the status line (there is no page for them to mark) */
   const ACTIONS = [
     { cmd: "theme", desc: "switch dark / light colors" },
+    { cmd: "history", desc: "commands you've run" },
     { cmd: "clear", desc: "wipe the screen" },
   ];
 
@@ -346,6 +347,25 @@
         setActive("");
         break;
 
+      case "history": {
+        /* the submit handler records the line before run() sees it, so
+           `history` lists itself last — same as a real shell */
+        if (!cmdHistory.length) {
+          echo(line, "no commands yet");
+          break;
+        }
+        const ol = document.createElement("ol");
+        ol.className = "histlist";
+        for (const h of cmdHistory) {
+          const li = document.createElement("li");
+          li.textContent = h;
+          ol.appendChild(li);
+        }
+        echo(line, ol);
+        setActive("");
+        break;
+      }
+
       case "top":
       case "home":
         screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
@@ -405,6 +425,7 @@
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const line = input.value;
+    hideCompletions();
     if (line.trim()) {
       cmdHistory.push(line);
       histIdx = cmdHistory.length;
@@ -414,7 +435,103 @@
     syncCursor();
   });
 
+  /* ---------------- tab completion ----------------
+     Completes the command word, or a `cd` argument, from the same tables
+     everything else is built from. One match completes it; several
+     complete as far as they agree, and a second Tab lists them.
+
+     `sudo` is deliberately absent: completing it would give away the joke. */
+
+  const COMPLETIONS = [...PAGES.map((p) => p.cmd), ...ACTIONS.map((a) => a.cmd), "cd", "email"].sort();
+
+  const completions = document.getElementById("completions");
+
+  function hideCompletions() {
+    completions.hidden = true;
+    completions.textContent = "";
+  }
+
+  function commonPrefix(list) {
+    let p = list[0];
+    for (const s of list) while (!s.startsWith(p)) p = p.slice(0, -1);
+    return p;
+  }
+
+  let lastTab = null; // the input value at the previous Tab, for double-Tab
+
+  function complete() {
+    const val = input.value;
+    const parts = val.trim().split(/\s+/).filter(Boolean);
+    const trailingSpace = /\s$/.test(val);
+    let pool, word, head;
+
+    if (parts.length <= 1 && !trailingSpace) {
+      pool = COMPLETIONS;
+      word = (parts[0] || "").toLowerCase();
+      head = "";
+    } else if ((ALIASES[parts[0].toLowerCase()] || parts[0].toLowerCase()) === "cd" && parts.length <= 2) {
+      pool = DIRS;
+      word = (trailingSpace && parts.length === 1 ? "" : parts[1] || "").toLowerCase();
+      head = "cd ";
+    } else {
+      return; // nothing sensible to complete
+    }
+
+    const hits = pool.filter((c) => c.startsWith(word));
+    if (!hits.length) return;
+
+    if (hits.length === 1) {
+      input.value = head + hits[0];
+      hideCompletions();
+    } else {
+      const prefix = commonPrefix(hits);
+      if (prefix.length > word.length) {
+        input.value = head + prefix;
+        hideCompletions();
+      } else if (lastTab === val) {
+        completions.textContent = hits.join("   ");
+        completions.hidden = false;
+      }
+    }
+    lastTab = input.value;
+    syncCursor();
+  }
+
+  input.addEventListener("input", hideCompletions);
+
   input.addEventListener("keydown", (e) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      complete();
+      return;
+    }
+
+    /* Ctrl-C: abandon the line, like a real shell. Skipped when something
+       is selected so the browser's copy still works — the same conflict
+       terminal emulators have, resolved the same way. */
+    if (e.ctrlKey && (e.key === "c" || e.key === "C")) {
+      const selected = input.selectionStart !== input.selectionEnd || String(getSelection() || "").length > 0;
+      if (selected) return;
+      e.preventDefault();
+      finishReveal();
+      input.value = "";
+      hideCompletions();
+      histIdx = cmdHistory.length;
+      syncCursor();
+      return;
+    }
+
+    /* Ctrl-L clears the screen. Chrome reserves it for the address bar and
+       may not let preventDefault stand; the `clear` command always works. */
+    if (e.ctrlKey && (e.key === "l" || e.key === "L")) {
+      e.preventDefault();
+      run("clear");
+      input.value = "";
+      hideCompletions();
+      syncCursor();
+      return;
+    }
+
     if (e.key === "ArrowUp") {
       if (histIdx > 0) input.value = cmdHistory[--histIdx];
       e.preventDefault();

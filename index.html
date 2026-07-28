@@ -99,6 +99,10 @@
       </main>
 
       <footer class="promptbar">
+        <!-- ambiguous Tab completions land here rather than in the screen:
+             printing them into the scrollback would wipe the page you are
+             reading, since this terminal shows one page at a time -->
+        <p class="completions" id="completions" hidden></p>
         <form id="prompt-form" autocomplete="off">
           <label class="prompt" for="cmd-input"><span class="p-host">jackie@google</span>:<span class="p-path">~</span>$</label>
           <span class="inputwrap">

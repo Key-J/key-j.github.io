@@ -508,6 +508,21 @@ h2 {
   font-size: 0.9rem;
 }
 
+/* history */
+
+.histlist {
+  margin: 0.25rem 0;
+  padding-left: 5ch;
+}
+
+.histlist li {
+  margin-block: 0.1rem;
+}
+
+.histlist li::marker {
+  color: var(--dim);
+}
+
 /* --------------------- command output in the log ----------------- */
 
 #applog .cmd {
@@ -538,6 +553,18 @@ h2 {
   padding: 0.7rem 2ch;
   border-top: 1px solid var(--border);
   background: var(--panel-2);
+}
+
+/* ambiguous Tab completions, listed above the prompt instead of printed
+   into the screen (which holds one page at a time and would lose it) */
+.completions {
+  margin: 0 0 0.4rem;
+  color: var(--dim);
+  font-size: 0.85rem;
+  /* pre-wrap so the gaps between candidates survive HTML whitespace
+     collapsing — otherwise the list reads as a sentence */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 #prompt-form {
