@@ -68,6 +68,7 @@ body {
   font-family: var(--font);
   line-height: var(--lh);
   overflow: hidden; /* the page never scrolls; the .screen does */
+  transition: padding 0.22s ease; /* matches the terminal's maximize */
 }
 
 /* --------------------- section sources / no-JS -------------------
@@ -142,6 +143,28 @@ html:not([data-js]) #pagesrc {
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 40px rgb(1 4 9 / 0.6); /* lift it off the animated bg */
+  transition:
+    width 0.22s ease,
+    height 0.22s ease,
+    border-radius 0.22s ease;
+}
+
+/* ---------------------------- maximize ---------------------------
+   The green dot fills the viewport. Long pages need the room, and
+   covering the background is the point: maximized is the focus mode.
+   The state is remembered, like the theme. */
+
+html[data-max] body {
+  padding: 0;
+}
+
+html[data-max] .terminal {
+  width: 100%;
+  height: 100dvh;
+  max-height: none;
+  border-radius: 0;
+  border-width: 0;
+  box-shadow: none;
 }
 
 [data-theme="light"] .terminal {
@@ -180,11 +203,15 @@ button.dot {
 }
 
 button.dot::after {
-  content: "\00d7";
   font: bold 10px/1 ui-monospace, Menlo, Consolas, monospace;
   color: rgba(0, 0, 0, 0.55);
   opacity: 0;
 }
+
+/* × close, − minimize, + maximize, as on the real thing */
+button.dot-red::after { content: "\00d7"; }
+button.dot-yellow::after { content: "\2212"; }
+button.dot-green::after { content: "+"; }
 
 button.dot:hover::after,
 button.dot:focus-visible::after {
@@ -690,6 +717,8 @@ h2 {
 
 @media (prefers-reduced-motion: reduce) {
   [data-intro] .terminal,
+  .terminal,
+  body,
   .deskicon {
     transition: none;
   }

@@ -619,6 +619,9 @@
      is already open. The red dot reverses the whole thing. */
   let opened = false;
   let autoOpen = 0;
+  /* close (red) ends the session, so reopening boots afresh; minimize
+     (yellow) keeps it, so reopening just shows the window again */
+  let rebootOnOpen = true;
 
   function openTerminal() {
     if (opened) return;
@@ -627,16 +630,39 @@
     document.removeEventListener("keydown", openTerminal, true);
     document.removeEventListener("pointerdown", openTerminal, true);
     root.dataset.intro = "open";
-    setTimeout(() => bootSequence("whoami"), reducedMotion ? 0 : 450); // once the zoom lands
+    const landed = reducedMotion ? 0 : 450;
+    if (rebootOnOpen) setTimeout(() => bootSequence("whoami"), landed); // once the zoom lands
+    else if (finePointer) setTimeout(() => input.focus(), landed);
     setTimeout(() => delete root.dataset.intro, reducedMotion ? 0 : 650); // drop icon + transition styles
   }
 
-  function armDesktop(autoDelay) {
+  function armDesktop(autoDelay, reboot) {
     opened = false;
+    rebootOnOpen = reboot !== false;
     document.addEventListener("keydown", openTerminal, true);
     document.addEventListener("pointerdown", openTerminal, true);
     if (autoDelay) autoOpen = setTimeout(openTerminal, autoDelay);
   }
+
+  /* yellow dot: minimize. The session is untouched — no reset, no fresh
+     Last login — so reopening puts you back exactly where you were. */
+  document.querySelector(".dot-yellow").addEventListener("click", () => {
+    if (!opened) return;
+    finishReveal(); // so the page is whole when it comes back
+    root.dataset.intro = "wait";
+    armDesktop(0, false);
+  });
+
+  /* green dot: maximize. Remembered across visits, like the theme. */
+  const greenDot = document.getElementById("dot-green");
+  function setMaximized(on) {
+    if (on) root.dataset.max = "1";
+    else delete root.dataset.max;
+    localStorage.setItem("maximized", on ? "1" : "0");
+    greenDot.setAttribute("aria-label", (on ? "Restore" : "Maximize") + " terminal");
+  }
+  greenDot.addEventListener("click", () => setMaximized(!("max" in root.dataset)));
+  setMaximized(localStorage.getItem("maximized") === "1");
 
   /* red dot: close the session — the window zooms back down to the
      desktop icon, and the next open is a fresh boot with a new
