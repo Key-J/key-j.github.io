@@ -33,8 +33,6 @@
 
   const ALIASES = { about: "whoami", "?": "help" };
   const PAGE_BY_CMD = new Map(PAGES.map((p) => [p.cmd, p]));
-  /* `cd` targets: every page that is somewhere to go — help is not a place */
-  const DIRS = PAGES.filter((p) => p.cmd !== "help").map((p) => p.cmd);
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
@@ -200,7 +198,10 @@
     const entries = [...PAGES, ...ACTIONS];
     const ul = document.createElement("ul");
     ul.className = "helplist";
-    ul.style.setProperty("--help-col", Math.max(...entries.map((e) => e.cmd.length)) + 2 + "ch");
+    /* longest name + "> " + a character of slack: 1ch is the width of "0",
+       which isn't exactly every glyph's advance, so an exact fit rounds
+       over and wraps ("publications" measured 143.3px in a 143.28px column) */
+    ul.style.setProperty("--help-col", Math.max(...entries.map((e) => e.cmd.length)) + 3 + "ch");
     for (const e of entries) {
       const li = document.createElement("li");
       const link = document.createElement("button");
@@ -315,8 +316,7 @@
     const line = raw.trim();
     if (!line) return;
     const [cmd, ...args] = line.split(/\s+/);
-    const rawArg = (args[0] || "").replace(/\/+$/, "").toLowerCase();
-    const arg = ALIASES[rawArg] || rawArg;
+    const arg = (args[0] || "").toLowerCase(); // only `theme dark|light` takes one
     const base = cmd.toLowerCase();
     const name = ALIASES[base] || base;
 
@@ -327,16 +327,6 @@
     }
 
     switch (name) {
-      case "cd": {
-        const target = arg === "" || arg === "~" ? "whoami" : arg;
-        if (DIRS.includes(target)) {
-          showPage(PAGE_BY_CMD.get(target), line);
-        } else {
-          echo(line, "cd: no such directory: " + escapeHtml(rawArg) + " — try one of: " + DIRS.join(", "), { error: true });
-        }
-        break;
-      }
-
       case "theme":
         if (arg === "dark" || arg === "light") setTheme(arg);
         else setTheme(root.dataset.theme === "dark" ? "light" : "dark");
@@ -432,7 +422,7 @@
 
      `sudo` is deliberately absent: completing it would give away the joke. */
 
-  const COMPLETIONS = [...PAGES.map((p) => p.cmd), ...ACTIONS.map((a) => a.cmd), "cd", "email"].sort();
+  const COMPLETIONS = [...PAGES.map((p) => p.cmd), ...ACTIONS.map((a) => a.cmd), "email"].sort();
 
   const completions = document.getElementById("completions");
   let flashTimer = 0;
@@ -459,21 +449,14 @@
     return p;
   }
 
-  /* what the line is asking to complete — the command word, or a `cd`
-     argument — plus everything matching it. null if neither applies. */
+  /* the command word being typed, plus everything matching it. Every
+     command is a single word now, so there are no arguments to complete. */
   function matches() {
     const val = input.value;
     const parts = val.trim().split(/\s+/).filter(Boolean);
-    const trailingSpace = /\s$/.test(val);
-    let ctx = null;
-
-    if (parts.length <= 1 && !trailingSpace) {
-      ctx = { pool: COMPLETIONS, word: (parts[0] || "").toLowerCase(), head: "" };
-    } else if ((ALIASES[parts[0].toLowerCase()] || parts[0].toLowerCase()) === "cd" && parts.length <= 2) {
-      ctx = { pool: DIRS, word: (trailingSpace && parts.length === 1 ? "" : parts[1] || "").toLowerCase(), head: "cd " };
-    }
-    if (!ctx) return null;
-    return { ...ctx, hits: ctx.pool.filter((c) => c.startsWith(ctx.word)) };
+    if (parts.length > 1 || /\s$/.test(val)) return null;
+    const word = (parts[0] || "").toLowerCase();
+    return { word, head: "", hits: COMPLETIONS.filter((c) => c.startsWith(word)) };
   }
 
   /* Candidates are buttons, not text: a touch keyboard has no Tab key, so

@@ -394,6 +394,7 @@ h2 {
   padding: 0;
   background: none;
   font: inherit;
+  white-space: nowrap; /* a command name never reads as two lines */
   color: var(--accent);
   /* no resting underline — nine dotted rows read as clutter; the accent
      color, "> " prefix, and cursor carry the clickable hint instead */
