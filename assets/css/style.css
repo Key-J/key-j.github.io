@@ -282,9 +282,10 @@ h2 {
 
 .helplist li {
   display: grid;
-  /* fixed first column (fits "> publications") so every row lines up;
-     max-content would let long names widen their own row only */
-  grid-template-columns: 15ch 1fr;
+  /* fixed first column so every row lines up (max-content would let long
+     names widen their own row only). main.js sets --help-col from the
+     longest command name, so this keeps working as the list changes. */
+  grid-template-columns: var(--help-col, 15ch) 1fr;
   gap: 2ch;
   align-items: baseline;
 }

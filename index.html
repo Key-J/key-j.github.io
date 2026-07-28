@@ -93,33 +93,12 @@
       </footer>
 
       <!-- tmux-style status line: every command, always visible; the
-           current page is marked like tmux's active window (*) -->
-      <nav class="statusbar" id="statusbar" aria-label="Commands">
-        <button type="button" data-cmd="whoami" class="active">whoami</button>
-        <button type="button" data-cmd="news">news</button>
-        <button type="button" data-cmd="projects">projects</button>
-        <button type="button" data-cmd="publications">publications</button>
-        <button type="button" data-cmd="contact">contact</button>
-        <button type="button" data-cmd="misc">misc</button>
-        <button type="button" data-cmd="help">help</button>
-      </nav>
+           current page is marked like tmux's active window (*). Buttons
+           are generated from PAGES in main.js — see the note there. -->
+      <nav class="statusbar" id="statusbar" aria-label="Commands"></nav>
     </div>
 
     <!-- ================= section content (printed on demand) ================= -->
-
-    <template id="tpl-help">
-      <ul class="helplist">
-        <li><button class="cmdlink" type="button" data-cmd="whoami">whoami</button><span class="desc">who I am</span></li>
-        <li><button class="cmdlink" type="button" data-cmd="news">news</button><span class="desc">recent updates</span></li>
-        <li><button class="cmdlink" type="button" data-cmd="projects">projects</button><span class="desc">what I'm building</span></li>
-        <li><button class="cmdlink" type="button" data-cmd="publications">publications</button><span class="desc">papers</span></li>
-        <li><button class="cmdlink" type="button" data-cmd="contact">contact</button><span class="desc">how to reach me</span></li>
-        <li><button class="cmdlink" type="button" data-cmd="misc">misc</button><span class="desc">everything else</span></li>
-        <li><button class="cmdlink" type="button" data-cmd="theme">theme</button><span class="desc">switch dark / light colors</span></li>
-        <li><button class="cmdlink" type="button" data-cmd="clear">clear</button><span class="desc">wipe the screen</span></li>
-        <li><button class="cmdlink" type="button" data-cmd="help">help</button><span class="desc">show this list again</span></li>
-      </ul>
-    </template>
 
     <template id="tpl-news">
       <ul class="newslog">

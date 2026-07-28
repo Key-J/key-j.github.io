@@ -6,7 +6,36 @@
   const form = document.getElementById("prompt-form");
   const input = document.getElementById("cmd-input");
 
-  const SECTIONS = ["news", "projects", "publications", "contact", "misc"];
+  /* ---------------- pages ----------------
+     One entry per command, in the order it appears in the status line and
+     the help list. Everything that used to be repeated across the SECTIONS
+     array, the status-line markup and the help template is generated from
+     here, so adding a section is a one-line edit.
+       kind "boot" — the static #boot block (whoami), not a template
+       kind "tpl"  — <template id="tpl-NAME">, the default              */
+
+  const PAGES = [
+    { cmd: "whoami", desc: "who I am", kind: "boot" },
+    { cmd: "news", desc: "recent updates" },
+    { cmd: "projects", desc: "what I'm building" },
+    { cmd: "publications", desc: "papers" },
+    { cmd: "contact", desc: "how to reach me" },
+    { cmd: "misc", desc: "everything else" },
+    { cmd: "help", desc: "show this list again" },
+  ];
+
+  /* commands that do something rather than print a page: listed in help,
+     absent from the status line (there is no page for them to mark) */
+  const ACTIONS = [
+    { cmd: "theme", desc: "switch dark / light colors" },
+    { cmd: "clear", desc: "wipe the screen" },
+  ];
+
+  const ALIASES = { about: "whoami", "?": "help" };
+  const PAGE_BY_CMD = new Map(PAGES.map((p) => [p.cmd, p]));
+  /* `cd` targets: every page that is somewhere to go — help is not a place */
+  const DIRS = PAGES.filter((p) => p.cmd !== "help").map((p) => p.cmd);
+
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
 
@@ -153,10 +182,56 @@
     return document.getElementById("tpl-" + name).content.cloneNode(true);
   }
 
-  /* mark the current page in the status line, tmux-style */
+  /* the help list, built from the same definitions as everything else.
+     The first column is sized here from the longest command name (plus
+     the "> " prefix) so the two columns line up whatever PAGES becomes. */
+  function helpContent() {
+    const entries = [...PAGES, ...ACTIONS];
+    const ul = document.createElement("ul");
+    ul.className = "helplist";
+    ul.style.setProperty("--help-col", Math.max(...entries.map((e) => e.cmd.length)) + 2 + "ch");
+    for (const e of entries) {
+      const li = document.createElement("li");
+      const link = document.createElement("button");
+      link.className = "cmdlink";
+      link.type = "button";
+      link.dataset.cmd = e.cmd;
+      link.textContent = e.cmd;
+      const desc = document.createElement("span");
+      desc.className = "desc";
+      desc.textContent = e.desc;
+      li.append(link, desc);
+      ul.appendChild(li);
+    }
+    return ul;
+  }
+
+  /* the tmux-style status line, also generated from PAGES */
   const statusbar = document.getElementById("statusbar");
+  for (const p of PAGES) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.cmd = p.cmd;
+    b.textContent = p.cmd;
+    statusbar.appendChild(b);
+  }
+
   function setActive(name) {
     statusbar.querySelectorAll("[data-cmd]").forEach((b) => b.classList.toggle("active", b.dataset.cmd === name));
+  }
+
+  /* the shell boots into whoami, so it starts marked — this replaces the
+     class="active" that used to be hard-coded into the status-line markup */
+  setActive("whoami");
+
+  /* print a page and mark it current; whoami is the static block */
+  function showPage(page, line) {
+    if (page.kind === "boot") {
+      showWhoami();
+      return;
+    }
+    echo(line, page.cmd === "help" ? helpContent() : sectionContent(page.cmd));
+    setActive(page.cmd);
   }
 
   /* whoami is the static #boot block, not a template — re-running it
@@ -176,35 +251,24 @@
     const line = raw.trim();
     if (!line) return;
     const [cmd, ...args] = line.split(/\s+/);
-    const arg = (args[0] || "").replace(/\/+$/, "").toLowerCase();
-    const name = cmd.toLowerCase();
+    const rawArg = (args[0] || "").replace(/\/+$/, "").toLowerCase();
+    const arg = ALIASES[rawArg] || rawArg;
+    const base = cmd.toLowerCase();
+    const name = ALIASES[base] || base;
 
-    if (name === "whoami" || name === "about") {
-      showWhoami();
-      return;
-    }
-    if (SECTIONS.includes(name)) {
-      echo(line, sectionContent(name));
-      setActive(name);
+    const page = PAGE_BY_CMD.get(name);
+    if (page) {
+      showPage(page, line);
       return;
     }
 
     switch (name) {
-      case "help":
-      case "?":
-        echo(line, sectionContent("help"));
-        setActive("help");
-        break;
-
       case "cd": {
-        const target = arg === "" || arg === "~" ? "about" : arg;
-        if (target === "about") {
-          showWhoami();
-        } else if (SECTIONS.includes(target)) {
-          echo(line, sectionContent(target));
-          setActive(target);
+        const target = arg === "" || arg === "~" ? "whoami" : arg;
+        if (DIRS.includes(target)) {
+          showPage(PAGE_BY_CMD.get(target), line);
         } else {
-          echo(line, "cd: no such directory: " + escapeHtml(arg) + " — try one of: about, " + SECTIONS.join(", "), { error: true });
+          echo(line, "cd: no such directory: " + escapeHtml(rawArg) + " — try one of: " + DIRS.join(", "), { error: true });
         }
         break;
       }
