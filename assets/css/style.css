@@ -414,6 +414,25 @@ h2 {
   color: var(--dim);
 }
 
+/* Phones: stack the description under its name instead of beside it.
+   The label column is 15ch — the width "publications" needs — which on a
+   390px screen leaves the description about 20ch, so nearly every one
+   wrapped mid-phrase. man pages break the same way for the same reason. */
+@media (max-width: 560px) {
+  .helplist {
+    gap: 9px;
+  }
+
+  .helplist li {
+    display: block;
+  }
+
+  .helplist .desc {
+    display: block;
+    padding-left: 2ch; /* under the name, clear of its "> " marker */
+  }
+}
+
 /* clickable command names (for visitors who'd rather not type) */
 
 .cmdlink {
