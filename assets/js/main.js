@@ -700,14 +700,29 @@
     if (autoDelay) autoOpen = setTimeout(openTerminal, autoDelay);
   }
 
-  /* yellow dot: minimize. The session is untouched — no reset, no fresh
-     Last login — so reopening puts you back exactly where you were. */
-  document.querySelector(".dot-yellow").addEventListener("click", () => {
+  /* Send the window back to the desktop icon. `reboot` decides what the
+     next open does: close (red) starts a fresh session, minimize (yellow)
+     restores the one already there. onHidden runs behind the shrunk
+     window, before anything can reopen it.
+
+     Arming is deferred until the shrink lands. Arming it immediately —
+     as minimize used to — left the "click anywhere to open" listener
+     live during the 0.4s animation, so a click while the window was
+     still shrinking sprang it straight back open. */
+  function hideToDesktop(reboot, onHidden) {
     if (!opened) return;
     finishReveal(); // so the page is whole when it comes back
+    opened = false; // a second dot click mid-animation does nothing
     root.dataset.intro = "wait";
-    armDesktop(0, false);
-  });
+    setTimeout(() => {
+      if (onHidden) onHidden();
+      armDesktop(0, reboot);
+    }, reducedMotion ? 0 : 450);
+  }
+
+  /* yellow dot: minimize. The session is untouched — no reset, no fresh
+     Last login — so reopening puts you back exactly where you were. */
+  document.querySelector(".dot-yellow").addEventListener("click", () => hideToDesktop(false));
 
   /* green dot: maximize. Remembered across visits, like the theme. */
   const greenDot = document.getElementById("dot-green");
@@ -724,10 +739,8 @@
      desktop icon, and the next open is a fresh boot with a new
      Last login time. Deliberate close, so no auto-reopen timer. */
   document.querySelector(".dot-red").addEventListener("click", () => {
-    finishReveal();
     introPlaying = true; // boot re-enables skipping when it replays
-    root.dataset.intro = "wait";
-    setTimeout(() => {
+    hideToDesktop(true, () => {
       /* reset the session behind the closed window */
       applog.innerHTML = "";
       boot.hidden = false;
@@ -739,8 +752,7 @@
       setActive("whoami");
       route("whoami"); // a fresh session is back at the top-level URL
       screen.scrollTo({ top: 0 });
-      armDesktop(0);
-    }, reducedMotion ? 0 : 450);
+    });
   });
 
   /* A deep link skips the desktop intro: someone following a shared link
@@ -751,12 +763,17 @@
   const initialCmd = hashCmd() || "whoami";
   currentCmd = initialCmd;
 
+  /* `opened` means the window is on screen, and the dots check it — so
+     the two paths that boot without ever going through openTerminal have
+     to set it themselves, or minimize and close silently do nothing. */
   if (initialCmd !== "whoami") {
     delete root.dataset.intro;
+    opened = true;
     bootSequence(initialCmd);
   } else if (root.dataset.intro) {
     armDesktop(1500);
   } else {
+    opened = true; // no intro to play: reduced motion, or JS-gate skipped
     bootSequence("whoami");
   }
 })();
