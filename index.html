@@ -19,14 +19,9 @@
     <meta name="twitter:description" content="Software engineer at Google, incoming Stanford MSCS (AI). A personal site that runs like a terminal." />
     <meta name="twitter:image" content="https://key-j.github.io/assets/img/portrait.jpg" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>" />
-    <!-- Light-theme retro pixel font; dark uses the system mono stack, so
-         most visitors never render a VT323 glyph. media="print" → onload
-         keeps it off the critical path for everyone while the preconnects
-         keep the connection warm for light. No <noscript> fallback needed:
-         without JS the theme can never leave dark. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" media="print" onload="this.media='all'" />
+    <!-- The light theme's pixel font is self-hosted; its @font-face lives in
+         style.css. Nothing here is loaded from a third party, so the site
+         reports no visitor to anyone. -->
     <link rel="stylesheet" href="assets/css/style.css" />
     <script>
       /* data-js: set before first paint so the section sources at the end

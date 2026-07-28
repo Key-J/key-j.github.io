@@ -11,6 +11,8 @@ HTML/CSS/JS — no build step. GitHub Pages serves this branch directly.
 - `assets/js/main.js` — the command interpreter (`run()`), theme, history.
 - `assets/js/bg.js` — background scenery (light theme only: interaction-triggered
   pixel walk-by characters; the dark theme is a plain background).
+- `assets/fonts/` — VT323 (light theme), vendored under the SIL Open Font
+  License 1.1; the licence is alongside it in `OFL.txt`.
 - `assets/img/` — images (`portrait.jpg` is the profile photo shown by `whoami`).
 - `assets/img/sprites/` — CC0 walk-cycle sheets: [GrafxKid](https://opengameart.org/users/grafxkid)
   ("Classic Hero", "Classic Hero and Baddies Pack" on OpenGameArt) and
