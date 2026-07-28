@@ -1,5 +1,6 @@
 /* Background scenery, drawn on a full-screen canvas *behind* the terminal.
-   Dark theme: nothing — plain page background, kept deliberately simple.
+   Dark theme: two sparkline rows of fake system telemetry, like a monitor
+   left running behind the window.
    Light theme: a bank of CC0 pixel characters (GrafxKid's "Classic Hero" +
    "Classic Hero and Baddies Pack", 0x72's "DungeonTileset II", both on
    opengameart.org/itch.io, plus retro palette-swap recolors of the
@@ -26,6 +27,72 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false; /* keep pixel art crisp when scaled */
     walkers = [];
+    tele = null; /* sample count depends on the width */
+  }
+
+  /* ---- dark theme: system telemetry ----
+     Two sparkline rows drawn low-contrast behind the window. Samples
+     advance deliberately slowly: the typewriter reveal inside the terminal
+     is what should hold your eye, and quick motion out here competes with
+     it. The printed numbers track the graphs rather than sitting fixed. */
+
+  const TELE_STEP = 0.4; /* seconds between samples */
+  const TELE_ALPHA = 0.5;
+  const TELE_FONT = "11px ui-monospace, Menlo, Consolas, monospace";
+
+  let tele = null;
+  let dim = "#565f89";
+
+  function readDim() {
+    dim = getComputedStyle(document.documentElement).getPropertyValue("--dim").trim() || "#565f89";
+  }
+
+  /* a smoothed random walk reads as a real reading; pure noise doesn't */
+  function stepLevel(v) {
+    return Math.min(1, Math.max(0.05, v + (Math.random() - 0.5) * 0.32));
+  }
+
+  function initTelemetry() {
+    const n = Math.max(24, Math.min(80, Math.round(W / 22)));
+    const row = () => {
+      const vals = [];
+      let level = 0.4;
+      for (let i = 0; i < n; i++) {
+        level = stepLevel(level);
+        vals.push(level);
+      }
+      return { vals, level };
+    };
+    tele = { cpu: row(), net: row(), acc: 0 };
+  }
+
+  function drawTelemetry(dt) {
+    ctx.clearRect(0, 0, W, H);
+    if (!tele) initTelemetry();
+
+    tele.acc += dt;
+    while (tele.acc >= TELE_STEP) {
+      tele.acc -= TELE_STEP;
+      for (const r of [tele.cpu, tele.net]) {
+        r.level = stepLevel(r.level);
+        r.vals.push(r.level);
+        r.vals.shift();
+      }
+    }
+
+    ctx.globalAlpha = TELE_ALPHA;
+    ctx.fillStyle = dim;
+    ctx.font = TELE_FONT;
+    const row = (r, baseY, maxH, label) => {
+      r.vals.forEach((v, i) => {
+        const h = 2 + v * maxH;
+        ctx.fillRect(20 + i * 5, baseY - h, 3, h);
+      });
+      ctx.fillText(label, 20 + r.vals.length * 5 + 12, baseY);
+    };
+    row(tele.cpu, 46, 26, "cpu  " + Math.round(tele.cpu.level * 100) + "%");
+    row(tele.net, H - 22, 22, "net  " + (tele.net.level * 3).toFixed(1) + "k/s");
+    ctx.globalAlpha = 1;
   }
 
   /* ---- light theme: walk-by characters (CC0 sprite sheets) ---- */
@@ -243,9 +310,8 @@
 
   /* ---------------- loop + wiring ---------------- */
 
-  /* The loop only runs while the light theme is showing — the dark theme
-     draws nothing, so leaving it armed would burn a callback every frame
-     on the default theme. rAF ids are always non-zero, so 0 means parked. */
+  /* Both themes draw now, so the loop simply runs (it was parked in dark
+     back when dark drew nothing). rAF already idles in a hidden tab. */
 
   let last = 0;
   let rafId = 0;
@@ -253,7 +319,8 @@
   function loop(ts) {
     const dt = Math.min((ts - last) / 1000, 0.05);
     last = ts;
-    drawWalkers(dt);
+    if (mode === "light") drawWalkers(dt);
+    else drawTelemetry(dt);
     rafId = requestAnimationFrame(loop);
   }
 
@@ -263,21 +330,18 @@
     rafId = requestAnimationFrame(loop);
   }
 
-  function stop() {
-    cancelAnimationFrame(rafId);
-    rafId = 0;
-  }
-
   document.addEventListener("themechange", (e) => {
     mode = e.detail === "light" ? "light" : "dark";
     ctx.clearRect(0, 0, W, H);
     walkers = [];
     emptyT = 1.5; /* a walk-by greets the light theme almost immediately */
-    if (mode === "light") start();
-    else stop();
+    tele = null; /* rebuild against the new palette */
+    readDim();
+    start();
   });
 
   window.addEventListener("resize", resize);
+  readDim();
   resize();
-  if (mode === "light") start();
+  start();
 })();
