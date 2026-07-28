@@ -191,31 +191,77 @@
     return frag;
   }
 
-  /* the help list, built from the same definitions as everything else.
-     The first column is sized here from the longest command name (plus
-     the "> " prefix) so the two columns line up whatever PAGES becomes. */
+  /* keyboard shortcuts, listed in help but only where a keyboard exists */
+  const KEYS = [
+    { label: "Tab", desc: "complete a command" },
+    { label: "↑ ↓", desc: "previous / next command" },
+    { label: "Ctrl-C", desc: "abandon the line" },
+    { label: "Ctrl-L", desc: "clear the screen" },
+  ];
+
+  /* the equivalent for a touch screen, which has none of the above — and
+     which is also where the status line runs off the right edge, so the
+     swipe is worth spelling out */
+  const TOUCH_TIPS = [
+    { label: "tap", desc: "run a command from the bar below — swipe it for more" },
+    { label: "type", desc: "matching commands appear above the prompt; tap one" },
+  ];
+
+  /* Help, grouped: pages are places, actions are things you do, keys are
+     how to drive the prompt. Built from the same tables as everything
+     else, so it can't drift out of step with what actually runs. */
   function helpContent() {
-    const entries = [...PAGES, ...ACTIONS];
-    const ul = document.createElement("ul");
-    ul.className = "helplist";
-    /* longest name + "> " + a character of slack: 1ch is the width of "0",
-       which isn't exactly every glyph's advance, so an exact fit rounds
-       over and wraps ("publications" measured 143.3px in a 143.28px column) */
-    ul.style.setProperty("--help-col", Math.max(...entries.map((e) => e.cmd.length)) + 3 + "ch");
-    for (const e of entries) {
-      const li = document.createElement("li");
-      const link = document.createElement("button");
-      link.className = "cmdlink";
-      link.type = "button";
-      link.dataset.cmd = e.cmd;
-      link.textContent = e.cmd;
-      const desc = document.createElement("span");
-      desc.className = "desc";
-      desc.textContent = e.desc;
-      li.append(link, desc);
-      ul.appendChild(li);
+    const hasKeyboard = window.matchMedia("(pointer: fine)").matches;
+    const groups = [
+      { title: "Pages", rows: PAGES.filter((p) => p.cmd !== "help").map((p) => ({ ...p, label: p.cmd })) },
+      { title: "Actions", rows: [...ACTIONS, PAGE_BY_CMD.get("help")].map((a) => ({ ...a, label: a.cmd })) },
+      hasKeyboard ? { title: "Keys", rows: KEYS } : { title: "Touch", rows: TOUCH_TIPS },
+    ];
+
+    /* one column width across every group, from the longest label. The +1
+       is slack: 1ch is the advance of "0", not of every glyph, so an exact
+       fit rounds over and wraps. The +2 covers the "> " on command rows. */
+    const widest = Math.max(...groups.flatMap((g) => g.rows.map((r) => r.label.length)));
+
+    const wrap = document.createElement("div");
+    wrap.className = "help";
+    wrap.style.setProperty("--help-col", widest + 3 + "ch");
+
+    const intro = document.createElement("p");
+    intro.className = "help-intro";
+    intro.textContent = "This site is a terminal. Type a command, or click one.";
+    wrap.appendChild(intro);
+
+    for (const group of groups) {
+      const section = document.createElement("section");
+      section.className = "help-group";
+      const title = document.createElement("h2");
+      title.className = "help-title";
+      title.textContent = group.title;
+      const ul = document.createElement("ul");
+      ul.className = "helplist";
+      for (const row of group.rows) {
+        const li = document.createElement("li");
+        /* commands are buttons; keys and tips are just labels */
+        const left = document.createElement(row.cmd ? "button" : "span");
+        if (row.cmd) {
+          left.className = "cmdlink";
+          left.type = "button";
+          left.dataset.cmd = row.cmd;
+        } else {
+          left.className = "keyname";
+        }
+        left.textContent = row.label;
+        const desc = document.createElement("span");
+        desc.className = "desc";
+        desc.textContent = row.desc;
+        li.append(left, desc);
+        ul.appendChild(li);
+      }
+      section.append(title, ul);
+      wrap.appendChild(section);
     }
-    return ul;
+    return wrap;
   }
 
   /* the tmux-style status line, also generated from PAGES */
@@ -342,22 +388,9 @@
         setActive("");
         break;
 
-
-      case "top":
-      case "home":
-        screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
-        break;
-
-      case "email":
-        echo(line, '<a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a>');
-        break;
-
+      /* the one command deliberately absent from help and completion */
       case "sudo":
-        if (args.join(" ") === "hire-me") {
-          echo(line, 'permission granted. run <button class="cmdlink" type="button" data-cmd="contact">contact</button> to get in touch.');
-        } else {
-          echo(line, "jackie is not in the sudoers file. this incident will be reported.", { error: true });
-        }
+        echo(line, "jackie is not in the sudoers file. this incident will be reported.", { error: true });
         break;
 
       default:
@@ -422,7 +455,7 @@
 
      `sudo` is deliberately absent: completing it would give away the joke. */
 
-  const COMPLETIONS = [...PAGES.map((p) => p.cmd), ...ACTIONS.map((a) => a.cmd), "email"].sort();
+  const COMPLETIONS = [...PAGES.map((p) => p.cmd), ...ACTIONS.map((a) => a.cmd)].sort();
 
   const completions = document.getElementById("completions");
   let flashTimer = 0;

@@ -364,9 +364,37 @@ h2 {
 
 /* ------------------------- boot / help list ---------------------- */
 
+/* help: grouped into pages / actions / keys */
+
+.help-intro {
+  margin: 0 0 0.25rem;
+}
+
+.help-group {
+  margin-top: 1rem;
+}
+
+.help-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* keys and touch tips: not clickable, so no "> " marker — indented
+   instead so their text lines up with the command names above */
+.keyname {
+  justify-self: start;
+  padding-left: 2ch;
+  white-space: nowrap;
+  color: var(--fg);
+}
+
 .helplist {
   list-style: none;
-  margin: 0.75rem 0 0;
+  margin: 0.4rem 0 0;
   padding: 0;
   display: grid;
   gap: 5px; /* px so row pitch matches across themes */
