@@ -818,66 +818,6 @@ h2 {
   color: var(--dim);
 }
 
-/* --------------------- status line (tmux-style) ------------------
-   Window chrome like the titlebar: fixed px sizing, identical in
-   both themes. Lists every command; * marks the current page.
-   Always a single line: when it doesn't fit (phones) it pans
-   sideways, with the right edge fading out to hint at more. The
-   extra right padding keeps the last button clear of the fade. */
-
-.statusbar {
-  flex: none;
-  display: flex;
-  gap: 14px;
-  padding: 6px 32px 6px 14px;
-  background: var(--panel-2);
-  border-top: 1px solid var(--border);
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-}
-
-.statusbar::-webkit-scrollbar {
-  display: none;
-}
-
-.statusbar button {
-  flex: none;
-  border: 0;
-  padding: 0;
-  background: none;
-  cursor: pointer;
-  font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace;
-  color: var(--dim);
-}
-
-.statusbar button:hover,
-.statusbar button:focus-visible {
-  color: var(--fg);
-}
-
-.statusbar button.active {
-  color: var(--accent);
-}
-
-.statusbar button.active::after {
-  content: "*";
-}
-
-/* Phones: still one line that pans sideways — two rows stop reading as a
-   tmux status line. Tightened a little so less of it is hidden, and
-   setActive() keeps the marked page scrolled into view. */
-@media (max-width: 560px) {
-  .statusbar {
-    gap: 11px;
-    padding-right: 26px;
-  }
-
-  .statusbar button {
-    font-size: 11.5px;
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .screen {

@@ -7,12 +7,11 @@
   const input = document.getElementById("cmd-input");
 
   /* ---------------- pages ----------------
-     One entry per command, in the order it appears in the status line and
-     the help list. Everything that used to be repeated across the SECTIONS
-     array, the status-line markup and the help template is generated from
-     here, so adding a section is a one-line edit.
-       kind "boot" — the static #boot block (whoami), not a template
-       kind "tpl"  — <template id="tpl-NAME">, the default              */
+     One entry per command, in the order it appears in the help list. The
+     help list, tab completion and the command dispatcher are all built
+     from here, so adding a section is a one-line edit.
+       kind "boot" — the static #boot block (whoami)
+       kind "tpl"  — a <div class="page" id="page-NAME">, the default  */
 
   const PAGES = [
     { cmd: "whoami", desc: "who I am", kind: "boot" },
@@ -24,8 +23,7 @@
     { cmd: "help", desc: "show this list again" },
   ];
 
-  /* commands that do something rather than print a page: listed in help,
-     absent from the status line (there is no page for them to mark) */
+  /* commands that do something rather than print a page */
   const ACTIONS = [
     { cmd: "theme", desc: "switch dark / light colors" },
     { cmd: "clear", desc: "wipe the screen" },
@@ -199,12 +197,10 @@
     { label: "Ctrl-L", desc: "clear the screen" },
   ];
 
-  /* the equivalent for a touch screen, which has none of the above — and
-     which is also where the status line runs off the right edge, so the
-     swipe is worth spelling out */
+  /* the equivalent for a touch screen, which has none of those keys */
   const TOUCH_TIPS = [
-    { label: "tap", desc: "run a command from the bar below — swipe it for more" },
-    { label: "type", desc: "matching commands appear above the prompt; tap one" },
+    { label: "tap", desc: "the prompt to see every command, then tap one" },
+    { label: "type", desc: "to narrow the list" },
   ];
 
   /* Help, grouped: pages are places, actions are things you do, keys are
@@ -264,38 +260,12 @@
     return wrap;
   }
 
-  /* the tmux-style status line, also generated from PAGES */
-  const statusbar = document.getElementById("statusbar");
-  for (const p of PAGES) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.dataset.cmd = p.cmd;
-    b.textContent = p.cmd;
-    statusbar.appendChild(b);
-  }
-
-  function setActive(name) {
-    statusbar.querySelectorAll("[data-cmd]").forEach((b) => b.classList.toggle("active", b.dataset.cmd === name));
-    /* when the line is panned (narrow screens), keep the marked page on
-       screen — otherwise the * marker is off past the right edge */
-    const marked = statusbar.querySelector(".active");
-    if (marked && statusbar.scrollWidth > statusbar.clientWidth) {
-      marked.scrollIntoView({ block: "nearest", inline: "nearest" });
-    }
-  }
-
-  /* the shell boots into whoami, so it starts marked — this replaces the
-     class="active" that used to be hard-coded into the status-line markup */
-  setActive("whoami");
-
-  /* print a page and mark it current; whoami is the static block */
+  /* print a page; whoami is the static block. There's no status line to
+     mark any more — the echoed command line at the top of the screen
+     already says which page you're on. */
   function showPage(page, line) {
-    if (page.kind === "boot") {
-      showWhoami();
-    } else {
-      echo(line, page.cmd === "help" ? helpContent() : sectionContent(page.cmd));
-      setActive(page.cmd);
-    }
+    if (page.kind === "boot") showWhoami();
+    else echo(line, page.cmd === "help" ? helpContent() : sectionContent(page.cmd));
     route(page.cmd);
   }
 
@@ -329,10 +299,7 @@
     currentCmd = cmd;
     const page = PAGE_BY_CMD.get(cmd);
     if (page.kind === "boot") showWhoami();
-    else {
-      echo(cmd, page.cmd === "help" ? helpContent() : sectionContent(cmd));
-      setActive(cmd);
-    }
+    else echo(cmd, page.cmd === "help" ? helpContent() : sectionContent(cmd));
   }
 
   addEventListener("popstate", showRoute);
@@ -352,7 +319,6 @@
     applog.innerHTML = "";
     boot.hidden = false;
     screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
-    setActive("whoami");
     playTicks(revealTicks(boot));
   }
 
@@ -385,7 +351,6 @@
         boot.hidden = true;
         applog.innerHTML = "";
         screen.scrollTo({ top: 0 });
-        setActive("");
         break;
 
       /* the one command deliberately absent from help and completion */
@@ -455,7 +420,10 @@
 
      `sudo` is deliberately absent: completing it would give away the joke. */
 
-  const COMPLETIONS = [...PAGES.map((p) => p.cmd), ...ACTIONS.map((a) => a.cmd)].sort();
+  /* deliberately not sorted: on touch this list is the navigation, so it
+     reads in the order the site presents itself — pages, then actions.
+     Alphabetical only earns its keep when there are more than nine. */
+  const COMPLETIONS = [...PAGES.map((p) => p.cmd), ...ACTIONS.map((a) => a.cmd)];
 
   const completions = document.getElementById("completions");
   let flashTimer = 0;
@@ -529,15 +497,18 @@
     syncCursor();
   }
 
-  /* Touch has no Tab, so there the candidates appear as you type and are
-     tapped. Pointer devices keep Tab and an uncluttered prompt. */
+  /* Touch has no Tab, so there the candidates appear on their own: every
+     command when the prompt is focused and empty, narrowing as you type.
+     That is the navigation — tapping the prompt summons the list the
+     status line used to hold permanently. Pointer devices keep Tab and an
+     uncluttered prompt bar. */
   function liveSuggest() {
     if (finePointer) {
       hideCompletions();
       return;
     }
     const m = matches();
-    if (!m || !m.word || !m.hits.length || (m.hits.length === 1 && m.hits[0] === m.word)) {
+    if (!m || !m.hits.length || (m.hits.length === 1 && m.hits[0] === m.word)) {
       hideCompletions();
       return;
     }
@@ -545,6 +516,7 @@
   }
 
   input.addEventListener("input", liveSuggest);
+  input.addEventListener("focus", liveSuggest);
 
   input.addEventListener("keydown", (e) => {
     if (e.key === "Tab") {
@@ -592,7 +564,8 @@
      the part naming the command to try. Shorten it rather than lose it. */
   const narrowScreen = window.matchMedia("(max-width: 560px)");
   function syncPlaceholder() {
-    input.placeholder = narrowScreen.matches ? "try 'help'" : "type a command — try 'help'";
+    /* no quotes: they read as though you might have to type them */
+    input.placeholder = narrowScreen.matches ? "type help" : "type a command — try help";
   }
   narrowScreen.addEventListener("change", syncPlaceholder);
   syncPlaceholder();
@@ -749,7 +722,6 @@
       lastLogin.remove();
       bootTicks = revealTicks(boot);
       printLastLogin();
-      setActive("whoami");
       route("whoami"); // a fresh session is back at the top-level URL
       screen.scrollTo({ top: 0 });
     });
