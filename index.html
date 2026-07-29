@@ -76,15 +76,21 @@
                   <dd>Carnegie Mellon University ('25) &rarr; Stanford MSCS, AI concentration (HCP, part-time, incoming)</dd>
                   <dt>location</dt>
                   <dd>Bay Area, CA</dd>
-                  <dt>status</dt>
-                  <dd>open to collaboration</dd>
+                  <!-- the same three endpoints the prompt carries on the right;
+                       one vocabulary, so [github] means the same in both places -->
+                  <dt>contact</dt>
+                  <dd class="links">
+                    <a href="https://www.linkedin.com/in/yikunjwang/">[linkedin]</a>
+                    <a href="https://github.com/Key-J">[github]</a>
+                    <a href="mailto:yikunjwang@gmail.com">[email]</a>
+                  </dd>
                 </dl>
               </div>
             </div>
           </div>
           <noscript>
             <p>JavaScript is off, so the interactive commands won't run.
-               Reach me: <a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a> &middot;
+               Reach me: <a href="mailto:yikunjwang@gmail.com">yikunjwang@gmail.com</a> &middot;
                <a href="https://github.com/Key-J">github.com/Key-J</a></p>
           </noscript>
         </div>
@@ -104,6 +110,14 @@
             <input id="cmd-input" type="text" spellcheck="false" autocapitalize="none"
                    aria-label="Type a command, e.g. help" placeholder="type a command — try 'help'" />
             <span class="cursor" id="cmd-cursor" aria-hidden="true"></span>
+          </span>
+          <!-- RPROMPT: zsh puts status on the right of the prompt line, so the
+               contact endpoints live there — always on screen, no extra chrome.
+               Hidden below 700px, where whoami carries the same three. -->
+          <span class="rprompt" id="rprompt">
+            <a href="https://www.linkedin.com/in/yikunjwang/">[linkedin]</a>
+            <a href="https://github.com/Key-J">[github]</a>
+            <a href="mailto:yikunjwang@gmail.com">[email]</a>
           </span>
         </form>
       </footer>
@@ -179,18 +193,6 @@
           <dd>placeholder — machine, keyboard, editor of choice</dd>
           <dt>links</dt>
           <dd>placeholder — fun corners of the internet</dd>
-        </dl>
-      </div>
-
-      <div class="page" id="page-contact">
-        <h2 class="page-title">contact</h2>
-        <dl class="kv">
-          <dt>email</dt>
-          <dd><a href="mailto:yikunw@andrew.cmu.edu">yikunw@andrew.cmu.edu</a></dd>
-          <dt>github</dt>
-          <dd><a href="https://github.com/Key-J">github.com/Key-J</a></dd>
-          <dt>scholar</dt>
-          <dd><a href="#">add your Google Scholar link</a></dd>
         </dl>
       </div>
 

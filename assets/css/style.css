@@ -346,6 +346,9 @@ button.dot:focus-visible::after {
   margin: 0;
   padding-left: 2ch;
   border-left: 2px solid var(--border);
+  /* maximized on a wide screen the box is ~1900px, which would run text
+     to 150+ characters a line; cap the measure rather than the window */
+  max-width: 100ch;
 }
 
 a {
@@ -461,13 +464,25 @@ h2 {
   text-decoration: underline dotted;
 }
 
-/* about: image + facts, side by side → stacked on narrow screens */
+/* about: image + facts, side by side → stacked on narrow screens.
+
+   The image column is sized to the image, not to an equal share of the
+   row. With equal columns the picture stayed 28ch wide while its column
+   kept growing with the viewport, so the text began at the next column
+   edge instead of after the photo — a 657px gap at 1920 maximized, more
+   than twice the image's own width. */
 
 .about-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(24ch, 1fr));
+  grid-template-columns: fit-content(28ch) 1fr;
   gap: 1.25rem 3ch;
   align-items: start;
+}
+
+@media (max-width: 560px) {
+  .about-grid {
+    grid-template-columns: 1fr; /* stack; the figure is max-width capped anyway */
+  }
 }
 
 .imgframe {
@@ -514,6 +529,35 @@ h2 {
 .kv dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+/* a row of bracketed link labels — the same three the prompt carries on
+   the right, so [github] reads identically in both places */
+.kv dd.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5ch;
+}
+
+/* --------------------------- RPROMPT -----------------------------
+   zsh puts status on the right of the prompt line; the contact
+   endpoints live there, so they're on screen without adding a bar.
+   Below 700px there's no room beside the input — phones get the same
+   three from whoami's contact row instead. */
+
+.rprompt {
+  flex: none;
+  display: flex;
+  gap: 1.5ch;
+  margin-left: 2ch;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .rprompt {
+    display: none;
+  }
 }
 
 /* news */
