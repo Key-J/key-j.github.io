@@ -433,18 +433,14 @@
     completions.textContent = "";
   }
 
-  /* a note in the completion strip. Feedback has to go here rather than
-     into the screen, which holds one page at a time and would lose
-     whatever you were reading. */
-  function showNote(text) {
+  /* a momentary note in the completion strip (^C). Feedback has to go
+     here rather than into the screen, which holds one page at a time and
+     would lose whatever you were reading. */
+  function flashNote(text) {
     clearTimeout(flashTimer);
     completions.textContent = text;
     completions.hidden = false;
-  }
-
-  function flashNote(text) {
-    showNote(text);
-    flashTimer = setTimeout(hideCompletions, 900); // ^C, and anything else momentary
+    flashTimer = setTimeout(hideCompletions, 900);
   }
 
   function commonPrefix(list) {
@@ -521,25 +517,6 @@
   input.addEventListener("input", liveSuggest);
   input.addEventListener("focus", liveSuggest);
 
-  /* ---------------- link targets ----------------
-     The contact links are short labels, not URLs, so hovering one prints
-     where it actually goes into the message strip — a browser's status
-     bar, rendered as shell output. Pointer devices only: on touch a
-     "hover" is the tap that's already navigating. */
-
-  function linkTarget(a) {
-    const href = a.getAttribute("href");
-    return href.startsWith("mailto:") ? href.slice(7) : href.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  }
-
-  if (finePointer) {
-    for (const a of document.querySelectorAll(".rprompt a, #boot .links a")) {
-      a.addEventListener("pointerenter", () => showNote(linkTarget(a)));
-      a.addEventListener("pointerleave", hideCompletions);
-      a.addEventListener("focus", () => showNote(linkTarget(a)));
-      a.addEventListener("blur", hideCompletions);
-    }
-  }
 
   input.addEventListener("keydown", (e) => {
     if (e.key === "Tab") {

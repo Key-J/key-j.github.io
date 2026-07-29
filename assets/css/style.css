@@ -539,6 +539,26 @@ h2 {
   gap: 0 1.5ch;
 }
 
+/* The brackets already mark these as links, so a resting underline under
+   every one is noise. Hover shifts colour instead; keyboard focus still
+   gets a visible ring, since colour alone is too weak to land on. */
+.kv dd.links a,
+.rprompt a {
+  text-decoration: none;
+}
+
+.kv dd.links a:hover,
+.rprompt a:hover {
+  color: var(--fg);
+}
+
+.kv dd.links a:focus-visible,
+.rprompt a:focus-visible {
+  color: var(--fg);
+  outline: 1px dotted currentColor;
+  outline-offset: 2px;
+}
+
 /* --------------------------- RPROMPT -----------------------------
    zsh puts status on the right of the prompt line; the contact
    endpoints live there, so they're on screen without adding a bar.
