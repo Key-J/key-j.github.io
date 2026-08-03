@@ -513,22 +513,16 @@ h2 {
   margin-bottom: 0;
 }
 
-/* the closing line and its link row are one thought, so they sit closer
-   than the paragraph rhythm above them */
-.facts p:has(+ p.links) {
-  margin-bottom: 0.3rem;
-}
-
-/* Links inside running prose, unlike the bracketed rows, have no marker of
-   their own — colour alone is too weak, so they carry a dim underline that
-   fills in on hover. */
-.facts p:not(.links) a {
+/* Reference links in running prose have no marker of their own — colour
+   alone is too weak, so they carry a dim underline that fills in on hover.
+   The bracketed endpoints in .reachout are marked already, so they opt out. */
+.facts p:not(.reachout) a {
   text-decoration: underline;
   text-decoration-color: var(--dim);
   text-underline-offset: 3px;
 }
 
-.facts p:not(.links) a:hover {
+.facts p:not(.reachout) a:hover {
   text-decoration-color: currentColor;
 }
 
@@ -554,29 +548,34 @@ h2 {
   overflow-wrap: anywhere;
 }
 
-/* a row of bracketed link labels — the same three the prompt carries on
-   the right, so [github] reads identically in both places. Not tied to
-   a <dd>: whoami closes with the same row as a <p>. */
-.links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 1.5ch;
+/* Bracketed link labels — whoami's closing line and the prompt's right
+   side carry the same three, so [github] reads identically in both places.
+   These sit inline in the sentence rather than on a row of their own: one
+   line instead of two, and the brackets do the grouping a row was doing.
+   Plain inline (not flex) so they wrap with the sentence on narrow screens;
+   a label itself never splits across lines. */
+.reachout a {
+  white-space: nowrap;
+}
+
+.reachout a + a {
+  margin-left: 0.5ch; /* on top of the collapsed space, matching the RPROMPT's 1.5ch */
 }
 
 /* The brackets already mark these as links, so a resting underline under
    every one is noise. Hover shifts colour instead; keyboard focus still
    gets a visible ring, since colour alone is too weak to land on. */
-.links a,
+.reachout a,
 .rprompt a {
   text-decoration: none;
 }
 
-.links a:hover,
+.reachout a:hover,
 .rprompt a:hover {
   color: var(--fg);
 }
 
-.links a:focus-visible,
+.reachout a:focus-visible,
 .rprompt a:focus-visible {
   color: var(--fg);
   outline: 1px dotted currentColor;
