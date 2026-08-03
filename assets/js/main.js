@@ -69,9 +69,13 @@
      by clicking (not typing) is first typed into the real prompt and
      submitted. Any key or click skips to the end of the current reveal. */
 
-  const REVEAL_MS = 70; // per output line
-  const TYPE_MS = 30; // per character typed into the prompt for a click
-  const ENTER_MS = 150; // beat between the last character and "Enter"
+  /* Paced to read as someone working at a terminal rather than a machine
+     replaying a log. 30ms/char is ~33 characters a second, which nobody
+     types; short pages also used to finish revealing inside 70ms, so the
+     content simply appeared. Any key or click still skips to the end. */
+  const REVEAL_MS = 120; // per output line
+  const TYPE_MS = 60; // per character typed into the prompt for a click
+  const ENTER_MS = 240; // beat between the last character and "Enter"
 
   let activeReveal = null;
 
