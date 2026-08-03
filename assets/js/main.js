@@ -22,11 +22,9 @@
     { cmd: "help", desc: "show this list again" },
   ];
 
-  /* commands that do something rather than print a page */
-  const ACTIONS = [
-    { cmd: "theme", desc: "switch dark / light colors" },
-    { cmd: "clear", desc: "wipe the screen" },
-  ];
+  /* commands that do something rather than print a page. `clear` is not
+     here on purpose — see the unlisted commands in run(). */
+  const ACTIONS = [{ cmd: "theme", desc: "switch dark / light colors" }];
 
   const ALIASES = { about: "whoami", "?": "help" };
   const PAGE_BY_CMD = new Map(PAGES.map((p) => [p.cmd, p]));
@@ -427,16 +425,22 @@
         else setTheme(root.dataset.theme === "dark" ? "light" : "dark");
         break;
 
+      /* ---- unlisted: absent from help and from completion ----
+         Every command in `help` navigates somewhere, which is what makes
+         that list readable. These two don't, so they stay off it — but a
+         terminal that answers "command not found" to `clear` isn't one.
+         Anyone who types either already knows what it does. */
+
       case "clear":
-        /* a real clear: blank screen, and no page marked in the status
-           line because none is showing */
+        /* a real clear: blank screen, nothing showing. Redundant while one
+           command replaces the last, so it survives for the reflex (and for
+           Ctrl-L, which routes here) rather than for the use. */
         lastLogin.remove();
         boot.hidden = true;
         applog.innerHTML = "";
         screen.scrollTo({ top: 0 });
         break;
 
-      /* the one command deliberately absent from help and completion */
       case "sudo":
         echo(line, "jackie is not in the sudoers file. this incident will be reported.", { error: true });
         break;
