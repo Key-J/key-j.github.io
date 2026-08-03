@@ -75,7 +75,7 @@
      Any key or click still skips to the end. */
   const TYPE_MS = 60; // per character typed into the prompt for a click
   const ENTER_MS = 240; // beat between the last character and "Enter"
-  const REVEAL_CPS = 480; // characters a second of printed output
+  const REVEAL_CPS = 320; // characters a second of printed output
   const ELEMENT_COST = 24; // an image or echoed line is worth this many characters
 
   let activeReveal = null;
