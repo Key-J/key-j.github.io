@@ -11,8 +11,15 @@
 (function () {
   "use strict";
   const canvas = document.getElementById("bg");
-  if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
+
+  /* Reduced motion asks for less movement, not a blank page. This used to
+     return here, which left the canvas unsized and empty — so anyone whose
+     OS reports it (on Windows that includes "adjust for best performance",
+     not just the accessibility toggle) saw no background at all. Instead the
+     scene is drawn once and the rAF loop never starts. */
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let mode = document.documentElement.dataset.theme === "light" ? "light" : "dark";
   let W = 0;
@@ -158,6 +165,10 @@
         SHEETS[name + "~2"].canvas = rotChannels(c, 2);
         SHEETS[name + "~2"].ready = true;
       }
+      /* sheets land after the first paint; with no loop running there is
+         nothing to pick them up, so the static scene redraws as each one
+         arrives */
+      if (reduced && mode === "light") drawStatic();
     };
     img.src = src;
   }
@@ -209,7 +220,8 @@
   let emptyT = 0;
 
   function spawnWalker(forceDef, forceDir) {
-    if (mode !== "light" || walkers.length >= 6) return;
+    /* the static scene must stay static: interaction can't add movement */
+    if (reduced || mode !== "light" || walkers.length >= 6) return;
     const now = performance.now();
     if (forceDef === undefined && now - lastSpawn < 2500) return;
     const def = WALKER_DEFS[forceDef !== undefined ? forceDef : Math.floor(Math.random() * WALKER_DEFS.length)];
@@ -330,6 +342,37 @@
     rafId = requestAnimationFrame(loop);
   }
 
+  /* ---------------- reduced motion: one frame, no loop ---------------- */
+
+  /* figures standing along the bottom rather than walking across it. Spaced
+     deterministically, so a resize redraws the same scene instead of
+     reshuffling it — a reshuffle is motion too. */
+  function placeStandingWalkers() {
+    const n = Math.max(2, Math.min(4, Math.round(W / 420)));
+    for (let i = 0; i < n; i++) {
+      const def = WALKER_DEFS[(i * 7) % WALKER_DEFS.length];
+      if (!SHEETS[def.sheet].ready) continue;
+      walkers.push({ def, dir: i % 2 ? -1 : 1, x: Math.round((W * (i + 0.5)) / n), speed: 0, frame: 0, frameT: 0 });
+    }
+  }
+
+  /* a dt of 0 advances nothing: the telemetry keeps the samples it was
+     seeded with, and the figures hold their pose */
+  function drawStatic() {
+    if (mode === "light") {
+      walkers = [];
+      placeStandingWalkers();
+      drawWalkers(0);
+    } else {
+      drawTelemetry(0);
+    }
+  }
+
+  function render() {
+    if (reduced) drawStatic();
+    else start();
+  }
+
   document.addEventListener("themechange", (e) => {
     mode = e.detail === "light" ? "light" : "dark";
     ctx.clearRect(0, 0, W, H);
@@ -337,11 +380,14 @@
     emptyT = 1.5; /* a walk-by greets the light theme almost immediately */
     tele = null; /* rebuild against the new palette */
     readDim();
-    start();
+    render();
   });
 
-  window.addEventListener("resize", resize);
+  window.addEventListener("resize", () => {
+    resize();
+    if (reduced) drawStatic(); /* no loop to pick the new size up */
+  });
   readDim();
   resize();
-  start();
+  render();
 })();
