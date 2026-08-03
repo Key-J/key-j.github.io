@@ -513,17 +513,16 @@ h2 {
   margin-bottom: 0;
 }
 
-/* Reference links in running prose have no marker of their own — colour
-   alone is too weak, so they carry a dim underline that fills in on hover.
-   The bracketed endpoints in .reachout are marked already, so they opt out. */
+/* Prose links rest bare, like the bracketed endpoints — colour alone marks
+   them, and a resting underline under every school name was noise. The
+   underline comes back on hover so there is still something to find them by. */
 .facts p:not(.reachout) a {
-  text-decoration: underline;
-  text-decoration-color: var(--dim);
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 
 .facts p:not(.reachout) a:hover {
-  text-decoration-color: currentColor;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* key: value listings */
