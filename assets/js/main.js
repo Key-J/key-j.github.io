@@ -69,13 +69,14 @@
      by clicking (not typing) is first typed into the real prompt and
      submitted. Any key or click skips to the end of the current reveal. */
 
-  /* Paced to read as someone working at a terminal rather than a machine
-     replaying a log. 30ms/char is ~33 characters a second, which nobody
-     types; short pages also used to finish revealing inside 70ms, so the
-     content simply appeared. Any key or click still skips to the end. */
-  const REVEAL_MS = 120; // per output line
+  /* Typing is a person, so it runs at a person's speed: 30ms/char was ~33
+     characters a second, which nobody manages. Printing is the machine
+     answering back, so it goes several times faster than the hands do.
+     Any key or click still skips to the end. */
   const TYPE_MS = 60; // per character typed into the prompt for a click
   const ENTER_MS = 240; // beat between the last character and "Enter"
+  const REVEAL_CPS = 480; // characters a second of printed output
+  const ELEMENT_COST = 24; // an image or echoed line is worth this many characters
 
   let activeReveal = null;
 
@@ -114,6 +115,49 @@
     step();
   }
 
+  /* Print a unit sequence. rAF rather than a timer per character: at 480
+     characters a second a timer chain would spend more time in scheduling
+     overhead than it does waiting, and drift badly. Each frame flips
+     however many units have come due, so the rate holds whatever the
+     frame rate is. */
+  function playStream(units, onDone) {
+    finishReveal();
+    const show = () => {
+      units.forEach((u) => u.classList.remove("pre-reveal"));
+      if (onDone) onDone();
+    };
+    if (!units.length || reducedMotion) return show();
+
+    /* running cost, so an image or an echoed line buys a small beat
+       instead of going by in the two milliseconds one character takes */
+    let acc = 0;
+    const dueAt = units.map((u) => (acc += u.classList.contains("ch") ? 1 : ELEMENT_COST));
+
+    let i = 0;
+    let raf = 0;
+    let t0 = 0;
+    const reveal = {
+      finish() {
+        cancelAnimationFrame(raf);
+        while (i < units.length) units[i++].classList.remove("pre-reveal");
+        if (onDone) onDone();
+      },
+    };
+    function frame(ts) {
+      if (!t0) t0 = ts;
+      const budget = ((ts - t0) / 1000) * REVEAL_CPS;
+      while (i < units.length && dueAt[i] <= budget) units[i++].classList.remove("pre-reveal");
+      if (i < units.length) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
+      if (activeReveal === reveal) activeReveal = null;
+      if (onDone) onDone();
+    }
+    activeReveal = reveal;
+    raf = requestAnimationFrame(frame);
+  }
+
   /* the intro (icon → window zoom → boot) always plays in full: clicks
      and keys only fast-forward a reveal once it has finished. (Running
      a command mid-intro still works — playTicks itself fast-forwards.) */
@@ -124,22 +168,58 @@
   document.addEventListener("keydown", skipReveal, true);
   document.addEventListener("pointerdown", skipReveal, true);
 
-  /* what counts as one printed "line": block rows, minus nested matches
-     (a .card reveals as one unit, not its inner paragraphs) */
-  const ROW_SELECTOR = "p, li, h1, h2, dt, dd, figure, .card";
+  /* Output prints a character at a time, the way a terminal does, rather
+     than a row at a time. Every character becomes its own <span class="ch">
+     up front, so printing is just an opacity flip: the text holds its final
+     space from the first frame and nothing reflows as it arrives. Inline
+     spans add no line-break opportunities, so wrapping is unchanged, and
+     both themes are monospace, so there is no kerning to break across them.
 
-  function rowsOf(container) {
-    const all = Array.from(container.querySelectorAll(ROW_SELECTOR));
-    const rows = all.filter((el) => !all.some((other) => other !== el && other.contains(el)));
-    return rows.length ? rows : [container];
+     Two things print whole. Images have nothing to type. So do .cmd lines —
+     a terminal echoes the command the instant you press Enter, it doesn't
+     type it back at you. */
+  const WHOLE_UNIT = "img, .cmd";
+  /* <noscript> holds its markup as raw *text* when scripting is on, so it
+     would otherwise split into hundreds of units that print invisibly */
+  const SKIP_UNIT = "noscript, script, style";
+
+  function splitUnits(container) {
+    if (container.__units) return container.__units; // idempotent: whoami reprints
+    const units = [];
+    (function collect(node) {
+      for (const child of Array.from(node.childNodes)) {
+        if (child.nodeType === Node.TEXT_NODE) {
+          if (!child.nodeValue.trim()) continue; // pure whitespace holds no ink
+          const frag = document.createDocumentFragment();
+          for (const ch of child.nodeValue) {
+            if (/\s/.test(ch)) {
+              frag.appendChild(document.createTextNode(ch)); // keep spaces bare: invisible anyway
+              continue;
+            }
+            const span = document.createElement("span");
+            span.className = "ch";
+            span.textContent = ch;
+            frag.appendChild(span);
+            units.push(span);
+          }
+          child.parentNode.replaceChild(frag, child);
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          if (child.matches(SKIP_UNIT)) continue;
+          else if (child.matches(WHOLE_UNIT)) units.push(child);
+          else collect(child);
+        }
+      }
+    })(container);
+    container.__units = units;
+    return units;
   }
 
-  /* hide rows now (opacity only, so layout and the a11y tree keep the
-     full content) and return the ticks that show them one by one */
-  function revealTicks(container) {
-    const rows = rowsOf(container);
-    rows.forEach((r) => r.classList.add("pre-reveal"));
-    return rows.map((r) => ({ delay: REVEAL_MS, fn: () => r.classList.remove("pre-reveal") }));
+  /* hide the units now (opacity only, so layout and the a11y tree keep the
+     full content) and hand back the sequence to print */
+  function streamUnits(container) {
+    const units = splitUnits(container);
+    units.forEach((u) => u.classList.add("pre-reveal"));
+    return units;
   }
 
   function echoLine(cmdText) {
@@ -163,18 +243,18 @@
     lastLogin.remove(); // the boot-session line never reprints
     boot.hidden = true;
     applog.innerHTML = "";
-    const ticks = [];
     const p = echoLine(cmdText);
+    let units = [];
     if (content != null) {
       const div = document.createElement("div");
       div.className = "output" + (opts && opts.error ? " text error" : "");
       if (typeof content === "string") div.innerHTML = content;
       else div.appendChild(content);
       applog.appendChild(div);
-      ticks.push(...revealTicks(div));
+      units = streamUnits(div);
     }
     scrollToLine(p);
-    playTicks(ticks);
+    playStream(units);
   }
 
   /* sections live as real (hidden) elements in #pagesrc rather than in a
@@ -316,13 +396,13 @@
   });
 
   /* whoami is the static #boot block, not a template — re-running it
-     re-shows that block with the same echo + streamed reveal */
+     re-shows that block and prints it again */
   function showWhoami() {
     lastLogin.remove(); // the boot-session line never reprints
     applog.innerHTML = "";
     boot.hidden = false;
     screen.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
-    playTicks(revealTicks(boot));
+    playStream(streamUnits(boot));
   }
 
   /* ---------------- commands ---------------- */
@@ -595,9 +675,9 @@
   }
 
   /* boot: the terminal runs `whoami` itself — types it into the prompt,
-     "presses Enter", then streams the #boot block (which is static
-     HTML, so it's simply hidden and revealed row by row) */
-  let bootTicks = revealTicks(boot);
+     "presses Enter", then prints the #boot block (which is static HTML,
+     so it's simply hidden and printed back out) */
+  let bootUnits = streamUnits(boot);
 
   /* real-date "Last login" line, inserted AFTER the rows are pre-hidden
      so it's already printed the moment the window opens; each session
@@ -638,10 +718,14 @@
       },
     });
     /* whoami is already on screen as the static #boot block, so it only
-       needs revealing; any other command is run for real */
-    if (cmd === "whoami") ticks.push(...bootTicks);
-    else ticks.push({ delay: 0, fn: () => run(cmd) });
-    ticks.push({ delay: 0, fn: () => { introPlaying = false; } }); // skipping re-enabled
+       needs printing; any other command is run for real. Either way
+       skipping stays off until the output has finished arriving. */
+    if (cmd === "whoami") {
+      ticks.push({ delay: 0, fn: () => playStream(bootUnits, () => { introPlaying = false; }) });
+    } else {
+      ticks.push({ delay: 0, fn: () => run(cmd) });
+      ticks.push({ delay: 0, fn: () => { introPlaying = false; } });
+    }
     playTicks(ticks);
   }
 
@@ -724,7 +808,7 @@
       input.value = "";
       syncCursor();
       lastLogin.remove();
-      bootTicks = revealTicks(boot);
+      bootUnits = streamUnits(boot);
       printLastLogin();
       route("whoami"); // a fresh session is back at the top-level URL
       screen.scrollTo({ top: 0 });
