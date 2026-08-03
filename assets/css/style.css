@@ -509,6 +509,29 @@ h2 {
   margin: 0 0 0.75rem;
 }
 
+.facts p:last-child {
+  margin-bottom: 0;
+}
+
+/* the closing line and its link row are one thought, so they sit closer
+   than the paragraph rhythm above them */
+.facts p:has(+ p.links) {
+  margin-bottom: 0.3rem;
+}
+
+/* Links inside running prose, unlike the bracketed rows, have no marker of
+   their own — colour alone is too weak, so they carry a dim underline that
+   fills in on hover. */
+.facts p:not(.links) a {
+  text-decoration: underline;
+  text-decoration-color: var(--dim);
+  text-underline-offset: 3px;
+}
+
+.facts p:not(.links) a:hover {
+  text-decoration-color: currentColor;
+}
+
 /* key: value listings */
 
 .kv {
@@ -532,8 +555,9 @@ h2 {
 }
 
 /* a row of bracketed link labels — the same three the prompt carries on
-   the right, so [github] reads identically in both places */
-.kv dd.links {
+   the right, so [github] reads identically in both places. Not tied to
+   a <dd>: whoami closes with the same row as a <p>. */
+.links {
   display: flex;
   flex-wrap: wrap;
   gap: 0 1.5ch;
@@ -542,17 +566,17 @@ h2 {
 /* The brackets already mark these as links, so a resting underline under
    every one is noise. Hover shifts colour instead; keyboard focus still
    gets a visible ring, since colour alone is too weak to land on. */
-.kv dd.links a,
+.links a,
 .rprompt a {
   text-decoration: none;
 }
 
-.kv dd.links a:hover,
+.links a:hover,
 .rprompt a:hover {
   color: var(--fg);
 }
 
-.kv dd.links a:focus-visible,
+.links a:focus-visible,
 .rprompt a:focus-visible {
   color: var(--fg);
   outline: 1px dotted currentColor;
